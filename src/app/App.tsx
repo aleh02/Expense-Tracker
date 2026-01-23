@@ -1,10 +1,6 @@
-import './App.css';
+import { RouterProvider } from 'react-router-dom';
+import { router } from './routes';
 
 export function App() {
-  return (
-    <div style={{ padding: 24, fontFamily: 'system-ui, sans-serif' }}>
-      <h1>Expense Tracker</h1>
-      <p>Setup progetto + struttura repository</p>
-    </div>
-  );
+  return <RouterProvider router={router} />;
 }
