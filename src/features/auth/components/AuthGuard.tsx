@@ -1,15 +1,13 @@
-import type React from "react";
+//Authentication Guard
 import { Navigate } from "react-router-dom";
+import { useAuth } from "../auth.context";
+import type React from "react";
 
-type Props = {
-    children: React.ReactNode;
-};
+export function AuthGuard({ children }: { children: React.ReactNode }) {
+    const { user, loading } = useAuth();
 
-export function AuthGuard({ children }: Props) {
-    //Auth (user check with Firebase)
-    const isLoggedIn = true;
-
-    if(!isLoggedIn) return <Navigate to="/login" replace />;
+    if (loading) return <p>Loading...</p>;
+    if (!user) return <Navigate to="/login" replace />;
 
     return <>{children}</>;
 }
