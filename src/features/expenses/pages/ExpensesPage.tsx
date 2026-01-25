@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useReducer, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { Category, Expense } from '../../../shared/types/models';
 import { useAuth } from '../../auth/auth.context';
 import { listCategories } from '../../categories/categories.service';

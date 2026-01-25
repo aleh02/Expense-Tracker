@@ -2,8 +2,6 @@ import { useEffect, useState } from "react";
 import type { Category } from "../../../shared/types/models";
 import { useAuth } from "../../auth/auth.context";
 import { createCategory, listCategories, removeCategory } from "../categories.service";
-import { reload } from "firebase/auth";
-import { loadBundle } from "firebase/firestore";
 
 
 export function CategoriesPage() {
