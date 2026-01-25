@@ -11,6 +11,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../../shared/firebase/firestore";
 import type { Expense } from "../../shared/types/models";
+import { monthRange } from "../../shared/utils/date";
 
 const EXPENSES_COL = 'expenses';
 
@@ -48,5 +49,25 @@ export async function createExpense(userId: string, input: {
 
 export async function removeExpense(expenseId: string): Promise<void> {
     await deleteDoc(doc(db, EXPENSES_COL, expenseId));
+}
+
+export async function listExpensesInMonth(userId: string, month: string): Promise<Expense[]> {
+    //filter by occuredAt string range [start, endExclusive)
+    const { start, endExclusive } = monthRange(month);
+    
+    const q = query(
+        collection(db, EXPENSES_COL),
+        where('userId', '==', userId),
+        where('occurredAt', '>=', start),
+        where('occurredAt', '<', endExclusive),
+        orderBy('occurredAt', 'desc'),
+    );
+
+    const snap = await getDocs(q);
+
+    return snap.docs.map((d) => {
+        const data = d.data() as Omit<Expense, 'id'>;
+        return { id: d.id, ...data };
+    });
 }
 
