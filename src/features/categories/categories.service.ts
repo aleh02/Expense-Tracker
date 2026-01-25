@@ -25,8 +25,8 @@ export async function listCategories(userId: string): Promise<Category[]> {
     const snap = await getDocs(q);
 
     return snap.docs.map((d) => {
-        const data = d.data() as Omit<Category, 'id'>;  //type w/o id
-        return { id: d.id, ...data };
+        const data = d.data() as Omit<Category, 'id'>;  //type w/o id, doc does not have id
+        return { id: d.id, ...data };   //get id from d.id
     });
 }
 
@@ -37,7 +37,7 @@ export async function createCategory(userId: string, name: string): Promise<void
     await addDoc(collection(db, CATEGORIES_COL), {
         userId,
         name: trimmed,
-        createdAt: Date.now(),  //or serverTimestamp()
+        createdAt: serverTimestamp(), 
     });
 }
 

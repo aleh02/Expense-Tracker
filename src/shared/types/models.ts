@@ -1,17 +1,19 @@
+import type { Timestamp } from "firebase/firestore";
+
 export type Category = {
     id: string;         //doc id
+    userId: string;
     name: string;
     color?: string;     //optional
-    userId: string;
-    createdAt: number;  //Date.now()
+    createdAt: Timestamp;  //Date.now()
 }
 
 export type Expense = {
     id: string;         //doc id
     userId: string;
     amount: number;     
-    categoryId: string; //reference by id
+    categoryId: string; //category doc id
     note?: string;      //optional
-    occuredAt: string;  //YYYY-MM-DD
-    createdAt: number;  //Date.now()
+    occurredAt: string;  //YYYY-MM-DD
+    createdAt: Timestamp;  //Date.now()
 }
