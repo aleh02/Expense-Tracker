@@ -3,6 +3,7 @@ import type { Category, Expense } from '../../../shared/types/models';
 import { useAuth } from '../../auth/auth.context';
 import { listCategories } from '../../categories/categories.service';
 import { createExpense, listExpenses, removeExpense } from '../expenses.service';
+import { OfflineBanner } from '../../../shared/components/OfflineBanner';
 
 //Today's date as YYYY-MM-DD (local)
 function todayYmd(): string {
@@ -159,6 +160,9 @@ export function ExpensesPage() {
     return (
         <div>
             <h2>Expenses</h2>
+            
+            <OfflineBanner />
+
             <p style={{ color: '#666', marginTop: 4 }}>
                 Add expenses and track them by date and category.
             </p>

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import type { Category } from "../../../shared/types/models";
 import { useAuth } from "../../auth/auth.context";
 import { createCategory, listCategories, removeCategory } from "../categories.service";
-
+import { OfflineBanner } from "../../../shared/components/OfflineBanner";
 
 export function CategoriesPage() {
     const { user } = useAuth(); //AuthGuard ensures this exists
@@ -72,6 +72,9 @@ export function CategoriesPage() {
     return (
         <div>
             <h2>Categories</h2>
+
+            <OfflineBanner />
+
             <p style={{ color: '#666', marginTop: 4 }}>
                 Create categories (e.g. Food, Rent, Transport...).
             </p>

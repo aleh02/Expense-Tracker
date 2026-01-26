@@ -4,6 +4,7 @@ import { currentMonth } from '../../../shared/utils/date';
 import { useAuth } from '../../auth/auth.context';
 import { listCategories } from '../../categories/categories.service';
 import { listExpensesInMonth } from '../../expenses/expenses.service';
+import { OfflineBanner } from '../../../shared/components/OfflineBanner';
 
 type CategoryTotal = {
     categoryId: string,
@@ -85,6 +86,8 @@ export function DashboardPage() {
     return (
         <div>
             <h2>Dashboard</h2>
+
+            <OfflineBanner />
 
             <div style={{ marginTop: 8 }}>
                 <label>

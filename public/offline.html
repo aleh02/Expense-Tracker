@@ -20,7 +20,26 @@
         <div class="box">
             <h1>You are offline</h1>
             <p>This app needs an internet connection to load fresh data.</p>
-            <p>Try again when you are back online.</p>
+            
+            <button id="retry">Try again</button>
+            <p style="color: #666; margin-top: 12px;">
+                Once you are back online, this page will redirect automatically.
+            </p>
         </div>
+
+        <script>
+            function goHome() {
+                //to avoid "back" returning to offline page
+                window.location.replace('/');
+            }
+
+            document.getElementById('retry').addEventListener('click', goHome);
+
+            //if user refreshes while online, return to the app
+            if(navigator.onLine) goHome();
+
+            //if back online, auto-redirect
+            window.addEventListener('online', goHome);
+        </script>
     </body>
 </html>
