@@ -5,7 +5,6 @@ import { useAuth } from '../../auth/auth.context';
 import { listCategories } from '../../categories/categories.service';
 import { listExpensesInMonth } from '../../expenses/expenses.service';
 import { OfflineBanner } from '../../../shared/components/OfflineBanner';
-import { enablePushNotifications } from '../../notifications/push.service';
 import { getBudgetForMonth, upsertBudget } from '../../budget/budget.service';
 
 type CategoryTotal = {
@@ -26,45 +25,6 @@ export function DashboardPage() {
     const [budgetInput, setBudgetInput] = useState('');
     const [savedBudget, setSavedBudget] = useState<number | null>(null);
     const [editingBudget, setEditingBugdet] = useState(false);
-
-    const [pushBusy, setPushBusy] = useState(false);
-    const [pushMsg, setPushMsg] = useState<string | null>(null)
-
-    //enable notifications button
-    async function onEnablePush() {
-        if (!user) return;
-        setPushBusy(true);
-        setPushMsg(null);
-        try {
-            await enablePushNotifications(user.uid);
-            setPushMsg('Push notifications enabled.');
-        } catch (e: unknown) {
-            console.error(e);
-            setPushMsg('Failed to enable push notifications.');
-        } finally {
-            setPushBusy(false);
-        }
-    }
-
-    //push notification test button
-    /* async function onTestPush() {
-        if (!user) return;
-        setPushBusy(true);
-        setPushMsg(null);
-        try {
-            await sendBudgetAlert(user.uid, {
-                title: 'Budget alert',
-                body: 'You are close to your monthly budget.',
-                url: '/app/dashboard',
-            });
-            setPushMsg('Test notification sent.');
-        } catch (e: unknown) {
-            console.error(e);
-            setPushMsg('Failed to send test notification.');
-        } finally {
-            setPushBusy(false);
-        }
-    } */
 
     useEffect(() => {
         if (!user) return;
@@ -176,26 +136,20 @@ export function DashboardPage() {
 
     return (
         <div>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8 }}>
-                <h2>Dashboard</h2>
-                <button onClick={onEnablePush} disabled={pushBusy}>
-                    {pushBusy ? 'Working...' : 'Enable notifications'}
-                </button>
-            </div>
+            <h2>Dashboard</h2>
 
-            {pushMsg && <p style={{ color: '#666' }}>{pushMsg}</p>}
             <OfflineBanner />
 
-            <div style={{ marginTop: 4 }}>
-                <label>
-                    Month{' '}
-                    <input
-                        type="month"
-                        value={month}
-                        onChange={(e) => setMonth(e.target.value)}
-                        disabled={loading}
-                    />
-                </label>
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 4 }}>
+                <p>
+                    Month
+                </p>
+                <input
+                    type="month"
+                    value={month}
+                    onChange={(e) => setMonth(e.target.value)}
+                    disabled={loading}
+                />
             </div>
 
             {loading && <p style={{ color: '#666' }}>Loading...</p>}
@@ -203,7 +157,7 @@ export function DashboardPage() {
 
             {!loading && !error && (
                 <>
-                    <h3 style={{ marginTop: 32 }}>Monthly budget</h3>
+                    <h3 style={{ marginTop: 20 }}>Monthly Budget</h3>
 
                     {savedBudget == null && !editingBudget && (
                         <p style={{ color: '#666' }}>No budget set for this month.</p>
@@ -226,7 +180,7 @@ export function DashboardPage() {
                             </>
                         ) : (
                             <>
-                                <input 
+                                <input
                                     placeholder="e.g. 500"
                                     value={budgetInput}
                                     onChange={(e) => setBudgetInput(e.target.value)}
@@ -242,15 +196,15 @@ export function DashboardPage() {
                                     </button>
                                 )}
                             </>
-                        )}    
+                        )}
                     </div>
 
-                    <h3 style={{ marginTop: 32 }}>Monthly total</h3>
+                    <h3 style={{ marginTop: 16 }}>Monthly Total</h3>
                     <p style={{ fontSize: 20, marginTop: 6 }}>
                         {totalMonth.toFixed(2)}
                     </p>
 
-                    <h3 style={{ marginTop: 16 }}>By category</h3>
+                    <h3 style={{ marginTop: 16 }}>By Category</h3>
                     <ul style={{ marginTop: 16 }}>
                         {totalsByCategory.map((t) => (
                             <li key={t.categoryId} style={{ display: 'flex', gap: 10 }}>

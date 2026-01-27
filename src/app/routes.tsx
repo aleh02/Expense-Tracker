@@ -1,3 +1,4 @@
+//router
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { AppLayout } from "./layouts/AppLayout";
 import { AuthGuard } from "../features/auth/components/AuthGuard";
@@ -5,6 +6,7 @@ import { LoginPage } from "../features/auth/pages/LoginPage";
 import { DashboardPage } from "../features/dashboard/pages/DashboardPage";
 import { ExpensesPage } from "../features/expenses/pages/ExpensesPage";
 import { CategoriesPage } from "../features/categories/pages/CategoriesPage";
+import { SettingsPage } from "../features/settings/pages/SettingsPage";
 
 export const router = createBrowserRouter([
     {
@@ -26,6 +28,7 @@ export const router = createBrowserRouter([
             { path: 'dashboard', element: <DashboardPage /> },
             { path: 'expenses', element: <ExpensesPage /> },
             { path: 'categories', element: <CategoriesPage /> },
+            { path: 'settings', element: <SettingsPage /> },
             { path: '*', element: <Navigate to="/app/dashboard" replace /> },
         ],
     },

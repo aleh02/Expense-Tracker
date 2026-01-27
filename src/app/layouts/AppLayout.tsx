@@ -1,7 +1,9 @@
+//route layout
 import { NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "../../features/auth/auth.context";
 import { logout } from "../../features/auth/auth.service";
 
+//Navbar + User info + slot (<Outlet/>) where child pages render
 const linkStyle = ({ isActive }: { isActive: boolean }) => ({
     marginRight: 12,
     textDecoration: 'none',
@@ -9,7 +11,7 @@ const linkStyle = ({ isActive }: { isActive: boolean }) => ({
 });
 
 export function AppLayout() {
-    const { user } = useAuth();
+    const { user } = useAuth(); //current authenticated user
 
     return (
         <div style={{ padding: 24, fontFamily: 'system-ui, sans-serif' }}>
@@ -26,6 +28,9 @@ export function AppLayout() {
                         <NavLink to="/app/categories" style={linkStyle}>
                             Categories
                         </NavLink>
+                        <NavLink to="/app/settings" style={linkStyle}>
+                            Settings
+                        </NavLink>
                     </nav>
                 </div>
 
@@ -38,8 +43,8 @@ export function AppLayout() {
             </header>
 
             <main style={{ borderTop: '1px solid #ddd', paddingTop: 16 }}>
-                <Outlet />
+                <Outlet /> 
             </main>
         </div>
-    )
+    );
 }
