@@ -5,6 +5,7 @@ import { useAuth } from '../../auth/auth.context';
 import { listCategories } from '../../categories/categories.service';
 import { listExpensesInMonth } from '../../expenses/expenses.service';
 import { OfflineBanner } from '../../../shared/components/OfflineBanner';
+import { enablePushNotifications, sendBudgetAlert } from '../../notifications/push.service';
 
 type CategoryTotal = {
     categoryId: string,
@@ -20,6 +21,43 @@ export function DashboardPage() {
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    const [pushBusy, setPushBusy] = useState(false);
+    const [pushMsg, setPushMsg] = useState<string | null>(null)
+
+    async function onEnablePush() {
+        if(!user) return;
+        setPushBusy(true);
+        setPushMsg(null);
+        try {
+            await enablePushNotifications(user.uid);
+            setPushMsg('Push notifications enabled.');
+        } catch (e: unknown) {
+            console.error(e);
+            setPushMsg('Failed to enable push notifications.');
+        } finally {
+            setPushBusy(false);
+        }
+    }
+
+    async function onTestPush() {
+        if(!user) return;
+        setPushBusy(true);
+        setPushMsg(null);
+        try {
+            await sendBudgetAlert(user.uid, {
+                title: 'Budget alert',
+                body: 'You are close to your monthly budget.',
+                url: '/app/dashboard',
+            });
+            setPushMsg('Test notification sent.');
+        } catch (e: unknown) {
+            console.error(e);
+            setPushMsg('Failed to send test notification.');
+        } finally {
+            setPushBusy(false);
+        }
+    }
 
     useEffect(() => {
         if (!user) return;
@@ -88,6 +126,16 @@ export function DashboardPage() {
             <h2>Dashboard</h2>
 
             <OfflineBanner />
+
+            <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
+                <button onClick={onEnablePush} disabled={pushBusy}>
+                    {pushBusy ? 'Working...' : 'Enable notifications'}
+                </button>
+                <button onClick={onTestPush} disabled={pushBusy}>
+                    Send test notification
+                </button>
+            </div>
+            {pushMsg && <p style={{ color: '#666' }}>{pushMsg}</p>}
 
             <div style={{ marginTop: 8 }}>
                 <label>

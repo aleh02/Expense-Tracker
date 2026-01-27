@@ -7,9 +7,12 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.js',
       registerType: 'autoUpdate', //keep SW updated
-       includeAssets: ['offline.html', 'icon-192x192.png', 'icon-512x512.png'],
-      manifest: {
+      includeAssets: ['offline.html', 'icon-192x192.png', 'icon-512x512.png'],
+      manifest: { //custom manifest here, no manifest file (vite)
         name: 'Expense Tracker',
         short_name: 'Expenses',
         description: 'Track expenses by category and month.',
@@ -33,32 +36,6 @@ export default defineConfig({
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable',
-          },
-        ],
-      },
-      workbox: {
-        //if navigation req fails serve offline.html
-        navigateFallback: '/offline.html',
-        navigateFallbackDenylist: [
-          //don't serve offline.html for asset requests / API calls
-          /^\/api\//,
-          /^\/__\/.*/,
-        ],
-        runtimeCaching: [
-          {
-            //cache JS/CSS/image
-            urlPattern: ({ request }) => 
-              request.destination === 'script' ||
-              request.destination === 'style' ||
-              request.destination === 'image',
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'assets',
-              expiration: {
-                maxEntries: 80,
-                maxAgeSeconds: 60 * 60 * 24 * 30
-              },
-            },
           },
         ],
       },
