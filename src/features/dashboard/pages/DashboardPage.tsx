@@ -5,7 +5,8 @@ import { useAuth } from '../../auth/auth.context';
 import { listCategories } from '../../categories/categories.service';
 import { listExpensesInMonth } from '../../expenses/expenses.service';
 import { OfflineBanner } from '../../../shared/components/OfflineBanner';
-import { enablePushNotifications, sendBudgetAlert } from '../../notifications/push.service';
+import { enablePushNotifications } from '../../notifications/push.service';
+import { getBudgetForMonth, upsertBudget } from '../../budget/budget.service';
 
 type CategoryTotal = {
     categoryId: string,
@@ -22,11 +23,16 @@ export function DashboardPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    const [budgetInput, setBudgetInput] = useState('');
+    const [savedBudget, setSavedBudget] = useState<number | null>(null);
+    const [editingBudget, setEditingBugdet] = useState(false);
+
     const [pushBusy, setPushBusy] = useState(false);
     const [pushMsg, setPushMsg] = useState<string | null>(null)
 
+    //enable notifications button
     async function onEnablePush() {
-        if(!user) return;
+        if (!user) return;
         setPushBusy(true);
         setPushMsg(null);
         try {
@@ -40,8 +46,9 @@ export function DashboardPage() {
         }
     }
 
-    async function onTestPush() {
-        if(!user) return;
+    //push notification test button
+    /* async function onTestPush() {
+        if (!user) return;
         setPushBusy(true);
         setPushMsg(null);
         try {
@@ -57,7 +64,7 @@ export function DashboardPage() {
         } finally {
             setPushBusy(false);
         }
-    }
+    } */
 
     useEffect(() => {
         if (!user) return;
@@ -69,16 +76,27 @@ export function DashboardPage() {
                 setLoading(true);
                 setError(null);
 
-                //load categories once + month expenses (in parallel)
-                const [cats, exps] = await Promise.all([
+                //load ONCE categories, month expenses and budget (in parallel)
+                const [cats, exps, budget] = await Promise.all([
                     listCategories(user.uid),
                     listExpensesInMonth(user.uid, month),
+                    getBudgetForMonth(user.uid, month),
                 ]);
 
                 if (cancelled) return;
 
                 setCategories(cats);
                 setExpenses(exps);
+
+                if (budget) {
+                    setSavedBudget(budget.amount);
+                    setBudgetInput(String(budget.amount));
+                    setEditingBugdet(false);
+                } else {
+                    setSavedBudget(null);
+                    setBudgetInput('');
+                    setEditingBugdet(true);
+                }
             } catch (e: unknown) {
                 console.error(e);
                 if (!cancelled) setError('Failed to load dashboard data.');
@@ -109,7 +127,7 @@ export function DashboardPage() {
         }
 
         const result: CategoryTotal[] = [];
-        for(const [categoryId, total] of acc.entries()) {
+        for (const [categoryId, total] of acc.entries()) {
             result.push({
                 categoryId,
                 name: categoryMap.get(categoryId) ?? 'Unknown category',
@@ -121,27 +139,58 @@ export function DashboardPage() {
         return result;
     }, [expenses, categoryMap]);
 
+    function onStartEditBudget() {
+        setBudgetInput(savedBudget == null ? '' : String(savedBudget));
+        setEditingBugdet(true);
+    }
+
+    function onCancelEditBudget() {
+        setBudgetInput(savedBudget == null ? '' : String(savedBudget));
+        setEditingBugdet(false);
+    }
+
+    //handler to save budget
+    async function onSaveBudget() {
+        if (!user) return;
+
+        const value = Number(budgetInput);
+        if (!Number.isFinite(value) || value <= 0) {
+            setError('Budget must be a positive number.');
+            return;
+        }
+
+        setLoading(true);
+        setError(null);
+
+        try {
+            await upsertBudget(user.uid, month, value);
+            setSavedBudget(value);
+            setEditingBugdet(false);
+        } catch (e: unknown) {
+            console.error(e);
+            setError('Failed to save budget.');
+        } finally {
+            setLoading(false);
+        }
+    }
+
     return (
         <div>
-            <h2>Dashboard</h2>
-
-            <OfflineBanner />
-
-            <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8 }}>
+                <h2>Dashboard</h2>
                 <button onClick={onEnablePush} disabled={pushBusy}>
                     {pushBusy ? 'Working...' : 'Enable notifications'}
                 </button>
-                <button onClick={onTestPush} disabled={pushBusy}>
-                    Send test notification
-                </button>
             </div>
-            {pushMsg && <p style={{ color: '#666' }}>{pushMsg}</p>}
 
-            <div style={{ marginTop: 8 }}>
+            {pushMsg && <p style={{ color: '#666' }}>{pushMsg}</p>}
+            <OfflineBanner />
+
+            <div style={{ marginTop: 4 }}>
                 <label>
                     Month{' '}
-                    <input 
-                        type="month" 
+                    <input
+                        type="month"
                         value={month}
                         onChange={(e) => setMonth(e.target.value)}
                         disabled={loading}
@@ -154,8 +203,50 @@ export function DashboardPage() {
 
             {!loading && !error && (
                 <>
-                    <h3 style={{ marginTop: 16 }}>Monthly total</h3>
-                    <p style={{ fontSize:20, marginTop: 6 }}>
+                    <h3 style={{ marginTop: 32 }}>Monthly budget</h3>
+
+                    {savedBudget == null && !editingBudget && (
+                        <p style={{ color: '#666' }}>No budget set for this month.</p>
+                    )}
+
+                    <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 6 }}>
+                        {!editingBudget ? (
+                            <>
+                                <span>
+                                    {savedBudget == null ? (
+                                        <span style={{ color: '#666' }}>Not set</span>
+                                    ) : (
+                                        <p style={{ fontSize: 20, marginTop: 6 }}>{savedBudget.toFixed(2)}</p>
+                                    )}
+                                </span>
+
+                                <button onClick={onStartEditBudget} disabled={loading} style={{ marginBottom: 12 }}>
+                                    {savedBudget == null ? 'Set' : 'Edit'}
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <input 
+                                    placeholder="e.g. 500"
+                                    value={budgetInput}
+                                    onChange={(e) => setBudgetInput(e.target.value)}
+                                    disabled={loading}
+                                    style={{ width: 160 }}
+                                />
+                                <button onClick={onSaveBudget} disabled={loading}>
+                                    {loading ? 'Working...' : 'Save'}
+                                </button>
+                                {savedBudget != null && (
+                                    <button onClick={onCancelEditBudget} disabled={loading}>
+                                        Cancel
+                                    </button>
+                                )}
+                            </>
+                        )}    
+                    </div>
+
+                    <h3 style={{ marginTop: 32 }}>Monthly total</h3>
+                    <p style={{ fontSize: 20, marginTop: 6 }}>
                         {totalMonth.toFixed(2)}
                     </p>
 

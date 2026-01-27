@@ -4,6 +4,9 @@ import { useAuth } from '../../auth/auth.context';
 import { listCategories } from '../../categories/categories.service';
 import { createExpense, listExpenses, removeExpense } from '../expenses.service';
 import { OfflineBanner } from '../../../shared/components/OfflineBanner';
+import { getBudgetForMonth } from '../../budget/budget.service';
+import { listExpensesInMonth } from '../expenses.service';
+import { sendBudgetAlert } from '../../notifications/push.service';
 
 //Today's date as YYYY-MM-DD (local)
 function todayYmd(): string {
@@ -61,7 +64,7 @@ export function ExpensesPage() {
         };
     }, [user?.uid]);
 
-    //set default category whenn categories arrive
+    //set default category when categories arrive
     useEffect(() => {
         if (categoryId) return;
         if (categories.length === 0) return;
@@ -125,6 +128,27 @@ export function ExpensesPage() {
             setNote('');
 
             await reloadExpenses();
+
+            //budget check + push
+            const month = occurredAt.slice(0, 7); //YYYY-MM from expense date
+            const budget = await getBudgetForMonth(user.uid, month);
+
+            if (budget) {
+                const monthExpenses = await listExpensesInMonth(user.uid, month);
+                const total = monthExpenses.reduce((s, e) => s + e.amount, 0);
+
+                try {
+                    if (budget && total >= budget.amount) {
+                        await sendBudgetAlert(user.uid, {
+                            title: 'Budget alert',
+                            body: `You spent ${total.toFixed(2)} this month (budget: ${budget.amount.toFixed(2)}).`,
+                            url: '/app/dashboard',
+                        });
+                    }
+                } catch (e: unknown) {
+                    console.warn('Push not sent (likely not subscribed):', e);
+                }
+            }
         } catch (e: unknown) {
             console.error(e);
             setError('Failed to create expense.');
@@ -160,7 +184,7 @@ export function ExpensesPage() {
     return (
         <div>
             <h2>Expenses</h2>
-            
+
             <OfflineBanner />
 
             <p style={{ color: '#666', marginTop: 4 }}>
