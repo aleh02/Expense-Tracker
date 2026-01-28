@@ -8,12 +8,20 @@ import {
     query,
     where,
     serverTimestamp,
+    updateDoc,
 } from "firebase/firestore";
 import { db } from "../../shared/firebase/firestore";
 import type { Expense } from "../../shared/types/models";
 import { monthRange } from "../../shared/utils/date";
 
 const EXPENSES_COL = 'expenses';
+
+export type ExpenseUpdateInput = {
+    amount: number;
+    categoryId: string;
+    occurredAt: string; // YYYY-MM-DD
+    note?: string;
+};
 
 export async function listExpenses(userId: string) {
     //gets current user's expense, newest first
@@ -51,10 +59,19 @@ export async function removeExpense(expenseId: string): Promise<void> {
     await deleteDoc(doc(db, EXPENSES_COL, expenseId));
 }
 
+export async function updateExpense(expenseId: string, input: ExpenseUpdateInput): Promise<void> {
+    await updateDoc(doc(db, EXPENSES_COL, expenseId), {
+        amount: input.amount,
+        categoryId: input.categoryId,
+        occurredAt: input.occurredAt,
+        note: input.note?.trim() || '',
+    });
+}
+
 export async function listExpensesInMonth(userId: string, month: string): Promise<Expense[]> {
     //filter by occuredAt string range [start, endExclusive)
     const { start, endExclusive } = monthRange(month);
-    
+
     const q = query(
         collection(db, EXPENSES_COL),
         where('userId', '==', userId),

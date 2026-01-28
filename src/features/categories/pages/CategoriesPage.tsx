@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Category } from "../../../shared/types/models";
 import { useAuth } from "../../auth/auth.context";
-import { createCategory, listCategories, removeCategory } from "../categories.service";
+import { createCategory, listCategories, removeCategory, updateCategory } from "../categories.service";
 import { OfflineBanner } from "../../../shared/components/OfflineBanner";
 
 export function CategoriesPage() {
@@ -10,19 +10,21 @@ export function CategoriesPage() {
     const [name, setName] = useState('');
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [editingId, setEditingId] = useState<string | null>(null);
+    const [draftName, setDraftName] = useState('');
 
     useEffect(() => {
-        if(!user) return;
+        if (!user) return;
 
         let cancelled = false;
 
         (async () => {
             try {
                 const data = await listCategories(user.uid);
-                if(!cancelled) setItems(data);
-            } catch(e: unknown) {
+                if (!cancelled) setItems(data);
+            } catch (e: unknown) {
                 console.log(e);
-                if(!cancelled) setError('Failed to load categories.');
+                if (!cancelled) setError('Failed to load categories.');
             }
         })();
 
@@ -31,18 +33,23 @@ export function CategoriesPage() {
         };
     }, [user?.uid]);
 
+    async function reload() {
+        if (!user) return;
+        const data = await listCategories(user.uid);
+        setItems(data);
+    }
+
     async function onAdd() {
-        if(!user) return;
+        if (!user) return;
         setBusy(true);
         setError(null);
         try {
             await createCategory(user.uid, name);
             setName('');
-            
+
             //reload after write
-            const data = await listCategories(user.uid);
-            setItems(data);
-        } catch(e: unknown) {
+            await reload();
+        } catch (e: unknown) {
             console.error(e);
             setError('Failed to create a category.')
         } finally {
@@ -51,22 +58,31 @@ export function CategoriesPage() {
     }
 
     async function onDelete(id: string) {
-        if(!user) return;
+        if (!user) return;
         setBusy(true);
         setError(null);
 
-        try{
+        try {
             await removeCategory(id);
 
             //reload after delete
-            const data = await listCategories(user.uid);
-            setItems(data);
-        } catch(e: unknown) {
+            await reload();
+        } catch (e: unknown) {
             console.error(e);
             setError('Failed to delete category.');
         } finally {
             setBusy(false);
-        }  
+        }
+    }
+
+    async function startEdit(id: string, currentName: string) {
+        setEditingId(id);
+        setDraftName(currentName);
+    }
+
+    async function cancelEdit() {
+        setEditingId(null);
+        setDraftName('');
     }
 
     return (
@@ -80,7 +96,7 @@ export function CategoriesPage() {
             </p>
 
             <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                <input 
+                <input
                     placeholder="New category name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
@@ -96,10 +112,47 @@ export function CategoriesPage() {
             <ul style={{ marginTop: 16 }}>
                 {items.map((c) => (
                     <li key={c.id} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                        <span>{c.name}</span>
-                        <button onClick={() => onDelete(c.id)} disabled={busy}>
-                            Delete
-                        </button>
+                        {editingId === c.id ? (
+                            <>
+                                <input
+                                    value={draftName}
+                                    onChange={(e) => setDraftName(e.target.value)}
+                                    disabled={busy}
+                                />
+                                <button
+                                    onClick={async () => {
+                                        setBusy(true);
+                                        setError(null);
+                                        try {
+                                            await updateCategory(c.id, draftName);
+                                            await reload();
+                                            cancelEdit();
+                                        } catch (e: unknown) {
+                                            console.error(e);
+                                            setError('Failed to update category.');
+                                        } finally {
+                                            setBusy(false);
+                                        }
+                                    }}
+                                    disabled={busy}
+                                >
+                                    Save
+                                </button>
+                                <button onClick={cancelEdit} disabled={busy}>
+                                    Cancel
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <span style={{ flex: 1, maxWidth: 100 }}>{c.name}</span>
+                                <button onClick={() => startEdit(c.id, c.name)} disabled={busy}>
+                                    Edit
+                                </button>
+                                <button onClick={() => onDelete(c.id)} disabled={busy}>
+                                    Delete
+                                </button>
+                            </>
+                        )}
                     </li>
                 ))}
             </ul>

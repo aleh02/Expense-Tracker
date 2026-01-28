@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { Category, Expense } from '../../../shared/types/models';
 import { useAuth } from '../../auth/auth.context';
 import { listCategories } from '../../categories/categories.service';
-import { createExpense, listExpenses, removeExpense } from '../expenses.service';
+import { createExpense, listExpenses, removeExpense, updateExpense } from '../expenses.service';
 import { OfflineBanner } from '../../../shared/components/OfflineBanner';
 import { getBudgetForMonth } from '../../budget/budget.service';
 import { listExpensesInMonth } from '../expenses.service';
@@ -32,6 +32,13 @@ export function ExpensesPage() {
 
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    //edit state
+    const [editingId, setEditingId] = useState<string | null>(null);
+    const [editAmount, setEditAmount] = useState('');
+    const [editCategoryId, setEditCategoryId] = useState('');
+    const [editOccurredAt, setEditOccurredAt] = useState('');
+    const [editNote, setEditNote] = useState('');
 
     const categoryMap = useMemo(() => {
         const m = new Map<string, string>();
@@ -172,6 +179,22 @@ export function ExpensesPage() {
         }
     }
 
+    async function startEdit(e: Expense) {
+        setEditingId(e.id);
+        setEditAmount(String(e.amount));
+        setEditCategoryId(e.categoryId);
+        setEditOccurredAt(e.occurredAt);
+        setEditNote(e.note ?? '');
+    }
+
+    async function cancelEditExpense() {
+        setEditingId(null);
+        setEditAmount('');
+        setEditCategoryId('');
+        setEditOccurredAt('');
+        setEditNote('');
+    }
+
     if (loading) {
         return (
             <div>
@@ -255,15 +278,105 @@ export function ExpensesPage() {
             <ul style={{ marginTop: 8 }}>
                 {expenses.map((e) => (
                     <li key={e.id} style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                        <span style={{ minWidth: 110 }}>{e.occurredAt}</span>
-                        <span style={{ minWidth: 120 }}>
-                            {categoryMap.get(e.categoryId) ?? 'Unknown category'}
-                        </span>
-                        <strong style={{ minWidth: 80 }}>{e.amount.toFixed(2)}</strong>
-                        <span style={{ flex: 1, color: '#666' }}>{e.note}</span>
-                        <button onClick={() => onDelete(e.id)} disabled={busy}>
-                            Delete
-                        </button>
+                        {editingId === e.id ? (
+                            <>
+                                <input
+                                    type="date"
+                                    value={editOccurredAt}
+                                    onChange={(ev) => setEditOccurredAt(ev.target.value)}
+                                    disabled={busy}
+                                />
+
+                                <select
+                                    value={editCategoryId}
+                                    onChange={(ev) => setEditCategoryId(ev.target.value)}
+                                    disabled={busy}
+                                >
+                                    {categories.map((c) => (
+                                        <option key={c.id} value={c.id}>
+                                            {c.name}
+                                        </option>
+                                    ))}
+                                </select>
+
+                                <input
+                                    value={editAmount}
+                                    onChange={(ev) => setEditAmount(ev.target.value)}
+                                    disabled={busy}
+                                    style={{ width: 90, justifyContent: 'center' }}
+                                />
+
+                                <input
+                                    value={editNote}
+                                    onChange={(ev) => setEditNote(ev.target.value)}
+                                    disabled={busy}
+                                    placeholder="Note"
+                                    style={{ width: 180 }}
+                                />
+
+                                <button
+                                    onClick={async () => {
+                                        if (!user) return;
+
+                                        const value = Number(editAmount);
+                                        if (!Number.isFinite(value) || value <= 0) {
+                                            setError('Amount must be a positive number.');
+                                            return;
+                                        }
+                                        if (!editCategoryId) {
+                                            setError('Please select a category.');
+                                            return;
+                                        }
+                                        if (!editOccurredAt) {
+                                            setError('Please select a date.');
+                                            return;
+                                        }
+
+                                        setBusy(true);
+                                        setError(null);
+
+                                        try {
+                                            await updateExpense(e.id, {
+                                                amount: value,
+                                                categoryId: editCategoryId,
+                                                occurredAt: editOccurredAt,
+                                                note: editNote,
+                                            });
+
+                                            await reloadExpenses();
+                                            cancelEditExpense();
+                                        } catch (err: unknown) {
+                                            console.error(err);
+                                            setError('Failed to update expense.');
+                                        } finally {
+                                            setBusy(false);
+                                        }
+                                    }}
+                                    disabled={busy}
+                                >
+                                    Save
+                                </button>
+
+                                <button onClick={cancelEditExpense} disabled={busy}>
+                                    Cancel
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <span style={{ minWidth: 110 }}>{e.occurredAt}</span>
+                                <span style={{ minWidth: 120 }}>
+                                    {categoryMap.get(e.categoryId) ?? 'Unknown category'}
+                                </span>
+                                <strong style={{ minWidth: 80 }}>{e.amount.toFixed(2)}</strong>
+                                <span style={{ flex: 1, color: '#666' }}>{e.note}</span>
+                                <button onClick={() => startEdit(e)} disabled={busy}>
+                                    Edit
+                                </button>
+                                <button onClick={() => onDelete(e.id)} disabled={busy}>
+                                    Delete
+                                </button>
+                            </>
+                        )}
                     </li>
                 ))}
             </ul>

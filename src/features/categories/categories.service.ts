@@ -7,6 +7,7 @@ import {
   orderBy,
   query,
   serverTimestamp,
+  updateDoc,
   where,
 } from 'firebase/firestore';
 import { db } from '../../shared/firebase/firestore';
@@ -43,4 +44,13 @@ export async function createCategory(userId: string, name: string): Promise<void
 
 export async function removeCategory(categoryId: string): Promise<void> {
     await deleteDoc(doc(db, CATEGORIES_COL, categoryId));
+}
+
+export async function updateCategory(categoryId: string, name: string): Promise<void> {
+    const trimmed = name.trim();
+    if(!trimmed) return;
+
+    await updateDoc(doc(db, CATEGORIES_COL, categoryId), {
+        name: trimmed,
+    });
 }
