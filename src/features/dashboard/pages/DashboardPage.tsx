@@ -6,6 +6,7 @@ import { listCategories } from '../../categories/categories.service';
 import { listExpensesInMonth } from '../../expenses/expenses.service';
 import { OfflineBanner } from '../../../shared/components/OfflineBanner';
 import { getBudgetForMonth, upsertBudget } from '../../budget/budget.service';
+import { CategoryDonut } from '../components/CategoryDonut';
 
 type CategoryTotal = {
     categoryId: string,
@@ -207,9 +208,25 @@ export function DashboardPage() {
                     <h3 style={{ marginTop: 16 }}>By Category</h3>
                     <ul style={{ marginTop: 16 }}>
                         {totalsByCategory.map((t) => (
-                            <li key={t.categoryId} style={{ display: 'flex', gap: 10 }}>
-                                <span style={{ minWidth: 160 }}>{t.name}</span>
-                                <strong>{t.total.toFixed(2)}</strong>
+                            <li
+                                key={t.categoryId}
+                                style={{
+                                    display: 'flex',
+                                    gap: 10,
+                                    alignItems: 'center',
+                                    padding: 10,
+                                    border: '1px solid rgba(255,255,255,0.08)',
+                                    borderRadius: 10,
+                                    maxWidth: 350,
+                                }}
+                            >
+                                <CategoryDonut value={t.total} total={totalMonth} size={52} />
+                                <div style={{ flex: 1 }}>
+                                    <div style={{ fontWeight: 600 }}>{t.name}</div>
+                                    <div style={{ color: '#666', marginTop: 2 }}>
+                                        {t.total.toFixed(2)}
+                                    </div>
+                                </div>
                             </li>
                         ))}
                     </ul>

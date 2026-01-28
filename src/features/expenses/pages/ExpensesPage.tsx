@@ -277,7 +277,7 @@ export function ExpensesPage() {
 
             <ul style={{ marginTop: 8 }}>
                 {expenses.map((e) => (
-                    <li key={e.id} style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                    <li key={e.id} style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
                         {editingId === e.id ? (
                             <>
                                 <input
@@ -303,7 +303,7 @@ export function ExpensesPage() {
                                     value={editAmount}
                                     onChange={(ev) => setEditAmount(ev.target.value)}
                                     disabled={busy}
-                                    style={{ width: 90, justifyContent: 'center' }}
+                                    style={{ width: 90 }}
                                 />
 
                                 <input
