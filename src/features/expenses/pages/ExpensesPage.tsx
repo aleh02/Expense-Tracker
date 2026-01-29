@@ -7,6 +7,9 @@ import { OfflineBanner } from '../../../shared/components/OfflineBanner';
 import { getBudgetForMonth } from '../../budget/budget.service';
 import { listExpensesInMonth } from '../expenses.service';
 import { sendBudgetAlert } from '../../notifications/push.service';
+import { getProfile } from '../../settings/profile.service';
+import { normalizeCurrency } from '../../../shared/utils/currency';
+import { convertAmount } from '../../../shared/services/fx.service';
 
 //Today's date as YYYY-MM-DD (local)
 function todayYmd(): string {
@@ -25,6 +28,7 @@ export function ExpensesPage() {
 
     //form state
     const [amount, setAmount] = useState(''); // keep as string for input
+    const [currency, setCurrency] = useState('EUR')
     const [categoryId, setCategoryId] = useState('');
     const [occurredAt, setOccurredAt] = useState(todayYmd());
     const [note, setNote] = useState('');
@@ -36,6 +40,7 @@ export function ExpensesPage() {
     //edit state
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editAmount, setEditAmount] = useState('');
+    const [editCurrency, setEditCurrency] = useState('');
     const [editCategoryId, setEditCategoryId] = useState('');
     const [editOccurredAt, setEditOccurredAt] = useState('');
     const [editNote, setEditNote] = useState('');
@@ -46,7 +51,7 @@ export function ExpensesPage() {
         return m;
     }, [categories]);
 
-    //load categories
+    //load categories and base currency
     useEffect(() => {
         if (!user) return;
 
@@ -57,6 +62,10 @@ export function ExpensesPage() {
                 setError(null);
                 setLoading(true);   //start loading
                 const cats = await listCategories(user.uid);
+
+                const p = await getProfile(user.uid);
+                setCurrency(p.baseCurrency);
+
                 if (!cancelled) setCategories(cats);
             } catch (e: unknown) {
                 console.error(e);
@@ -126,6 +135,7 @@ export function ExpensesPage() {
         try {
             await createExpense(user.uid, {
                 amount: value,
+                currency,
                 categoryId,
                 occurredAt,
                 note,
@@ -142,13 +152,19 @@ export function ExpensesPage() {
 
             if (budget) {
                 const monthExpenses = await listExpensesInMonth(user.uid, month);
-                const total = monthExpenses.reduce((s, e) => s + e.amount, 0);
+
+                const base = normalizeCurrency(currency);
+                let totalBase = 0;
+
+                for(const e of monthExpenses) {
+                    totalBase += await convertAmount(e.occurredAt, e.amount, e.currency, base);
+                }
 
                 try {
-                    if (budget && total >= budget.amount) {
+                    if (totalBase >= budget.amount) {
                         await sendBudgetAlert(user.uid, {
                             title: 'Budget alert',
-                            body: `You spent ${total.toFixed(2)} this month (budget: ${budget.amount.toFixed(2)}).`,
+                            body: `You spent ${totalBase.toFixed(2)} ${base} this month (budget: ${budget.amount.toFixed(2)} ${base}).`,
                             url: '/app/dashboard',
                         });
                     }
@@ -182,6 +198,7 @@ export function ExpensesPage() {
     async function startEdit(e: Expense) {
         setEditingId(e.id);
         setEditAmount(String(e.amount));
+        setEditCurrency(normalizeCurrency(e.currency));
         setEditCategoryId(e.categoryId);
         setEditOccurredAt(e.occurredAt);
         setEditNote(e.note ?? '');
@@ -190,6 +207,7 @@ export function ExpensesPage() {
     async function cancelEditExpense() {
         setEditingId(null);
         setEditAmount('');
+        setEditCurrency('');
         setEditCategoryId('');
         setEditOccurredAt('');
         setEditNote('');
@@ -228,6 +246,17 @@ export function ExpensesPage() {
                             onChange={(e) => setAmount(e.target.value)}
                             disabled={busy}
                         />
+                    </label>
+
+                    <label>
+                        Currency
+                        <select value={currency} onChange={(e) => setCurrency(e.target.value)}>
+                            <option value="EUR">EUR</option>
+                            <option value="USD">USD</option>
+                            <option value="GBP">GBP</option>
+                            <option value="CNY">CNY</option>
+                            <option value="JPY">JPY</option>
+                        </select>
                     </label>
 
                     <label>
@@ -306,6 +335,18 @@ export function ExpensesPage() {
                                     style={{ width: 90 }}
                                 />
 
+                                <select 
+                                    value={editCurrency} 
+                                    onChange={(ev) => setEditCurrency(ev.target.value)}
+                                    disabled={busy}
+                                >
+                                    <option value="EUR">EUR</option>
+                                    <option value="USD">USD</option>
+                                    <option value="GBP">GBP</option>
+                                    <option value="CNY">CNY</option>
+                                    <option value="JPY">JPY</option>
+                                </select>
+
                                 <input
                                     value={editNote}
                                     onChange={(ev) => setEditNote(ev.target.value)}
@@ -338,6 +379,7 @@ export function ExpensesPage() {
                                         try {
                                             await updateExpense(e.id, {
                                                 amount: value,
+                                                currency: editCurrency,
                                                 categoryId: editCategoryId,
                                                 occurredAt: editOccurredAt,
                                                 note: editNote,
@@ -368,6 +410,7 @@ export function ExpensesPage() {
                                     {categoryMap.get(e.categoryId) ?? 'Unknown category'}
                                 </span>
                                 <strong style={{ minWidth: 80 }}>{e.amount.toFixed(2)}</strong>
+                                 <strong style={{ minWidth: 80 }}>{e.currency}</strong>
                                 <span style={{ flex: 1, color: '#666' }}>{e.note}</span>
                                 <button onClick={() => startEdit(e)} disabled={busy}>
                                     Edit

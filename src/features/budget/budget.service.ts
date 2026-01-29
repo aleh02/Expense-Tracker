@@ -1,5 +1,6 @@
-import { collection, doc, getDocs, query, setDoc, where, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../../shared/firebase/firestore";
+import { normalizeCurrency } from "../../shared/utils/currency";
 
 const BUDGET_COL = 'budgets';
 
@@ -8,29 +9,26 @@ export type BudgetDoc = {
     userId: string;
     month: string;  //YYYY-MM
     amount: number;
+    currency: string;   //currency used when budget was set
 }
 
+//gets budget with deterministic id 
 export async function getBudgetForMonth(userId: string, month: string): Promise<BudgetDoc | null> {
-    const q = query(
-        collection(db, BUDGET_COL),
-        where('userId', '==', userId),
-        where('month', '==', month),
-    );
+    const id = `${userId}_${month}`;
+    const ref = doc(db, BUDGET_COL, id);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) return null;
 
-    const snap = await getDocs(q);
-    if (snap.empty) return null;
-
-    const d = snap.docs[0];
-    const data = d.data() as Omit<BudgetDoc, 'id'>;
-    return { id: d.id, ...data };
+    const data = snap.data() as Omit<BudgetDoc, 'id'>;
+    return { id: id, ...data, currency: normalizeCurrency(data.currency) };
 }
 
-export async function upsertBudget(userId: string, month: string, amount: number): Promise<void> {
+export async function upsertBudget(userId: string, month: string, amount: number, currency: string): Promise<void> {
     //deterministic doc id, ONE budget per user per month
     const id = `${userId}_${month}`;
     await setDoc(
         doc(db, BUDGET_COL, id),
-        { userId, month, amount, updatedAt: serverTimestamp() },
+        { userId, month, amount, currency: normalizeCurrency(currency), updatedAt: serverTimestamp() },
         { merge: true },
     );
 }

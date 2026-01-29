@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../auth/auth.context";
 import { enablePushNotifications, sendBudgetAlert } from "../../notifications/push.service";
+import { getProfile, setBaseCurrency } from "../profile.service";
 
 async function getCurrentSubscription(): Promise<PushSubscription | null> {
     if (!('serviceWorker' in navigator)) return null;
@@ -14,6 +15,8 @@ export function SettingsPage() {
     const [loading, setLoading] = useState(false);
     const [msg, setMsg] = useState<string | null>(null);
     const [pushEnabled, setPushEnabled] = useState(false);
+
+    const [baseCurrency, setBaseCurrencyState] = useState('EUR');
 
     //detects current push state
     useEffect(() => {
@@ -32,6 +35,15 @@ export function SettingsPage() {
             cancelled = true;
         };
     }, []);
+
+    //changes currency if user changes
+    useEffect(() => {
+        if (!user) return;
+        (async () => {
+            const p = await getProfile(user.uid);
+            setBaseCurrencyState(p.baseCurrency);
+        })();
+    }, [user?.uid]);
 
     async function onEnablePush() {
         if (!user) return;
@@ -91,14 +103,43 @@ export function SettingsPage() {
         }
     }
 
+    async function onSaveCurrency() {
+        if (!user) return;
+        setLoading(true);
+        setMsg(null);
+        try {
+            await setBaseCurrency(user.uid, baseCurrency);
+            setMsg('Base currency saved.');
+        } catch (e: unknown) {
+            console.error(e);
+            setMsg('Failed to save base currency.');
+        } finally {
+            setLoading(false);
+        }
+    }
+
     return (
         <div>
             <h2>Settings</h2>
 
             <p style={{ color: '#666', marginTop: 6 }}>
-                Manage notification permissions and test push delivery.
+                Manage currency, notification permissions and test push delivery.
             </p>
+            <h3 style={{ marginTop: 16 }}>Currency</h3>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8 }}>
+                <select value={baseCurrency} onChange={(e) => setBaseCurrencyState(e.target.value)} disabled={loading}>
+                    <option value="EUR">EUR</option>
+                    <option value="USD">USD</option>
+                    <option value="GBP">GBP</option>
+                    <option value="CNY">CNY</option>
+                    <option value="JPY">JPY</option>
+                </select>
+                <button onClick={onSaveCurrency} disabled={loading}>
+                    {loading ? 'Working...' : 'Save'}
+                </button>
+            </div>
 
+            <h3 style={{ marginTop: 16 }}>Notifications</h3>
             <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
                 {pushEnabled ? (
                     <button onClick={onDisablePush} disabled={loading}>

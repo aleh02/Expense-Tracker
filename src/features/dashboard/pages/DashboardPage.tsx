@@ -7,6 +7,9 @@ import { listExpensesInMonth } from '../../expenses/expenses.service';
 import { OfflineBanner } from '../../../shared/components/OfflineBanner';
 import { getBudgetForMonth, upsertBudget } from '../../budget/budget.service';
 import { CategoryDonut } from '../components/CategoryDonut';
+import { convertAmount } from '../../../shared/services/fx.service';
+import { getProfile } from '../../settings/profile.service';
+import { normalizeCurrency } from '../../../shared/utils/currency';
 
 type CategoryTotal = {
     categoryId: string,
@@ -25,7 +28,28 @@ export function DashboardPage() {
 
     const [budgetInput, setBudgetInput] = useState('');
     const [savedBudget, setSavedBudget] = useState<number | null>(null);
-    const [editingBudget, setEditingBugdet] = useState(false);
+    const [savedBudgetCurrency, setSavedBudgetCurrency] = useState<string>("EUR");
+    const [editingBudget, setEditingBudget] = useState(false);
+
+    const [budgetBase, setBudgetBase] = useState<number | null>(null);
+    const [budgetBaseLoading, setBudgetBaseLoading] = useState(false);
+
+    const [baseCurrency, setBaseCurrency] = useState('EUR');
+
+    const [totalsLoading, setTotalsLoading] = useState(false);
+    const [totalMonthBase, setTotalMonthBase] = useState(0);
+    const [totalsByCategoryBase, setTotalsByCategoryBase] = useState<Map<string, number>>(new Map());
+
+
+    //loads base currency
+    useEffect(() => {
+        if (!user) return;
+        (async () => {
+            const p = await getProfile(user.uid);
+            setBaseCurrency(p.baseCurrency);
+        })();
+    }, [user?.uid]);
+
 
     useEffect(() => {
         if (!user) return;
@@ -51,12 +75,14 @@ export function DashboardPage() {
 
                 if (budget) {
                     setSavedBudget(budget.amount);
+                    setSavedBudgetCurrency(normalizeCurrency(budget.currency));
                     setBudgetInput(String(budget.amount));
-                    setEditingBugdet(false);
+                    setEditingBudget(false);
                 } else {
                     setSavedBudget(null);
+                    setSavedBudgetCurrency(baseCurrency);
                     setBudgetInput('');
-                    setEditingBugdet(true);
+                    setEditingBudget(true);
                 }
             } catch (e: unknown) {
                 console.error(e);
@@ -77,37 +103,59 @@ export function DashboardPage() {
         return m;
     }, [categories]);
 
-    const totalMonth = useMemo(() => {
-        return expenses.reduce((sum, e) => sum + e.amount, 0)
-    }, [expenses]);
+    //calculates total by month and by category
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            try {
+                setTotalsLoading(true);
+
+                let total = 0;
+                const byCat = new Map<string, number>();    //by category
+
+                for (const e of expenses) {
+                    const baseValue = await convertAmount(e.occurredAt, e.amount, e.currency, baseCurrency);
+
+                    total += baseValue;
+                    byCat.set(e.categoryId, (byCat.get(e.categoryId) ?? 0) + baseValue);
+                }
+
+                if (cancelled) return;
+                setTotalMonthBase(total);
+                setTotalsByCategoryBase(byCat);
+            } finally {
+                if (!cancelled) setTotalsLoading(false);
+            }
+        })();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [expenses, baseCurrency]);
 
     const totalsByCategory = useMemo((): CategoryTotal[] => {
-        const acc = new Map<string, number>();
-        for (const e of expenses) {
-            acc.set(e.categoryId, (acc.get(e.categoryId) ?? 0) + e.amount);
-        }
-
         const result: CategoryTotal[] = [];
-        for (const [categoryId, total] of acc.entries()) {
+
+        for (const [categoryId, total] of totalsByCategoryBase.entries()) {
             result.push({
                 categoryId,
                 name: categoryMap.get(categoryId) ?? 'Unknown category',
                 total,
             });
         }
-
         result.sort((a, b) => b.total - a.total);
         return result;
-    }, [expenses, categoryMap]);
+    }, [totalsByCategoryBase, categoryMap]);
 
     function onStartEditBudget() {
         setBudgetInput(savedBudget == null ? '' : String(savedBudget));
-        setEditingBugdet(true);
+        setSavedBudgetCurrency(baseCurrency);
+        setEditingBudget(true);
     }
 
     function onCancelEditBudget() {
         setBudgetInput(savedBudget == null ? '' : String(savedBudget));
-        setEditingBugdet(false);
+        setEditingBudget(false);
     }
 
     //handler to save budget
@@ -124,9 +172,10 @@ export function DashboardPage() {
         setError(null);
 
         try {
-            await upsertBudget(user.uid, month, value);
+            await upsertBudget(user.uid, month, value, baseCurrency);
             setSavedBudget(value);
-            setEditingBugdet(false);
+            setSavedBudgetCurrency(baseCurrency);
+            setEditingBudget(false);
         } catch (e: unknown) {
             console.error(e);
             setError('Failed to save budget.');
@@ -134,6 +183,35 @@ export function DashboardPage() {
             setLoading(false);
         }
     }
+
+    //display budget comparison
+    useEffect(() => {
+        let cancelled = false;
+
+        (async () => {
+            if (savedBudget == null) {
+                setBudgetBase(null);
+                return;
+            }
+
+            try {
+                setBudgetBaseLoading(true);
+
+                const date = `${month}-01`; // budget reference date
+
+                const converted = await convertAmount(date, savedBudget, savedBudgetCurrency, baseCurrency);
+                if (!cancelled) setBudgetBase(converted);
+            } catch (e: unknown) {
+                console.error(e);
+            } finally {
+                if (!cancelled) setBudgetBaseLoading(false);
+            }
+        })();
+
+        return () => {
+            cancelled = true;
+        }
+    }, [savedBudget, savedBudgetCurrency, baseCurrency, month]);
 
     return (
         <div>
@@ -171,7 +249,17 @@ export function DashboardPage() {
                                     {savedBudget == null ? (
                                         <span style={{ color: '#666' }}>Not set</span>
                                     ) : (
-                                        <p style={{ fontSize: 20, marginTop: 6 }}>{savedBudget.toFixed(2)}</p>
+                                        <div style={{ marginTop: 6 }}>
+                                            <p style={{ fontSize: 20, marginTop: 6 }}>
+                                                {savedBudget.toFixed(2)} {savedBudgetCurrency}
+                                            </p>
+
+                                            {normalizeCurrency(savedBudgetCurrency) !== normalizeCurrency(baseCurrency) && (
+                                                <p style={{ color: "#666", marginTop: 4 }}>
+                                                    ≈ {budgetBaseLoading ? "..." : `${(budgetBase ?? 0).toFixed(2)} ${baseCurrency}`} (converted)
+                                                </p>
+                                            )}
+                                        </div>
                                     )}
                                 </span>
 
@@ -181,13 +269,16 @@ export function DashboardPage() {
                             </>
                         ) : (
                             <>
-                                <input
-                                    placeholder="e.g. 500"
-                                    value={budgetInput}
-                                    onChange={(e) => setBudgetInput(e.target.value)}
-                                    disabled={loading}
-                                    style={{ width: 160 }}
-                                />
+                                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                                    <input
+                                        placeholder={`e.g. 500 (${baseCurrency})`}
+                                        value={budgetInput}
+                                        onChange={(e) => setBudgetInput(e.target.value)}
+                                        disabled={loading}
+                                        style={{ width: 160 }}
+                                    />
+                                    <span style={{ color: "#666", minWidth: 48 }}>{baseCurrency}</span>
+                                </div>
                                 <button onClick={onSaveBudget} disabled={loading}>
                                     {loading ? 'Working...' : 'Save'}
                                 </button>
@@ -200,12 +291,27 @@ export function DashboardPage() {
                         )}
                     </div>
 
-                    <h3 style={{ marginTop: 16 }}>Monthly Total</h3>
-                    <p style={{ fontSize: 20, marginTop: 6 }}>
-                        {totalMonth.toFixed(2)}
-                    </p>
+                    <h3 style={{ marginTop: 16 }}>Monthly Total ({baseCurrency})</h3>
+                    {totalsLoading ? (
+                        <p style={{ color: '#666' }}>Loading...</p>
+                    ) : (
+                        <p style={{ fontSize: 20, marginTop: 6 }}>
+                            {totalMonthBase.toFixed(2)}
+                        </p>
+                    )
+                    }
 
-                    <h3 style={{ marginTop: 16 }}>By Category</h3>
+                    {savedBudget != null && !totalsLoading && (
+                        <p style={{ marginTop: 6, color: totalMonthBase >= savedBudget ? "crimson" : "#666" }}>
+                            {totalMonthBase >= savedBudget
+                                ? `Over budget by ${(totalMonthBase - savedBudget).toFixed(2)} ${baseCurrency}.`
+                                : `Remaining ${(savedBudget - totalMonthBase).toFixed(2)} ${baseCurrency}.`}
+                        </p>
+                    )}
+
+
+                    <h3 style={{ marginTop: 16 }}>By Category ({baseCurrency})</h3>
+                    {totalsLoading && <p style={{ color: '#666' }}>Loading...</p>}
                     <ul style={{ marginTop: 16 }}>
                         {totalsByCategory.map((t) => (
                             <li
@@ -220,7 +326,7 @@ export function DashboardPage() {
                                     maxWidth: 350,
                                 }}
                             >
-                                <CategoryDonut value={t.total} total={totalMonth} size={52} />
+                                <CategoryDonut value={t.total} total={totalMonthBase} size={52} />
                                 <div style={{ flex: 1 }}>
                                     <div style={{ fontWeight: 600 }}>{t.name}</div>
                                     <div style={{ color: '#666', marginTop: 2 }}>
