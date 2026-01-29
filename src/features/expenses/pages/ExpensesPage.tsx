@@ -26,6 +26,12 @@ export function ExpensesPage() {
     const [categories, setCategories] = useState<Category[]>([]);
     const [expenses, setExpenses] = useState<Expense[]>([]);
 
+    const [busy, setBusy] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const [baseCurrency, setBaseCurrency] = useState("EUR");
+    const [convertedById, setConvertedById] = useState<Record<string, number>>({});
+
     //form state
     const [amount, setAmount] = useState(''); // keep as string for input
     const [currency, setCurrency] = useState('EUR')
@@ -33,9 +39,6 @@ export function ExpensesPage() {
     const [occurredAt, setOccurredAt] = useState(todayYmd());
     const [note, setNote] = useState('');
     const [loading, setLoading] = useState(true); //page bootstrap loading
-
-    const [busy, setBusy] = useState(false);
-    const [error, setError] = useState<string | null>(null);
 
     //edit state
     const [editingId, setEditingId] = useState<string | null>(null);
@@ -64,6 +67,7 @@ export function ExpensesPage() {
                 const cats = await listCategories(user.uid);
 
                 const p = await getProfile(user.uid);
+                setBaseCurrency(p.baseCurrency);
                 setCurrency(p.baseCurrency);
 
                 if (!cancelled) setCategories(cats);
@@ -156,7 +160,7 @@ export function ExpensesPage() {
                 const base = normalizeCurrency(currency);
                 let totalBase = 0;
 
-                for(const e of monthExpenses) {
+                for (const e of monthExpenses) {
                     totalBase += await convertAmount(e.occurredAt, e.amount, e.currency, base);
                 }
 
@@ -212,6 +216,32 @@ export function ExpensesPage() {
         setEditOccurredAt('');
         setEditNote('');
     }
+
+    //converts expenses in different currencies
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            const base = normalizeCurrency(baseCurrency);
+            const next: Record<string, number> = {};
+
+            for (const e of expenses) {
+                const from = normalizeCurrency(e.currency);
+                if (from === base) continue;
+
+                try {
+                    next[e.id] = await convertAmount(e.occurredAt, e.amount, from, base);
+                } catch {   //if fx fails/offline
+                    next[e.id] = Number.NaN;
+                }
+            }
+
+            if (!cancelled) setConvertedById(next);
+        })();
+
+        return () => {
+            cancelled = true;
+        }
+    }, [expenses, baseCurrency]);
 
     if (loading) {
         return (
@@ -306,7 +336,15 @@ export function ExpensesPage() {
 
             <ul style={{ marginTop: 8 }}>
                 {expenses.map((e) => (
-                    <li key={e.id} style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <li
+                        key={e.id}
+                        style={{
+                            display: "grid",
+                            gridTemplateColumns: "110px 130px minmax(200px, 220px) 1fr 140px",
+                            gap: 12,
+                            alignItems: "center",
+                        }}
+                    >
                         {editingId === e.id ? (
                             <>
                                 <input
@@ -328,80 +366,87 @@ export function ExpensesPage() {
                                     ))}
                                 </select>
 
-                                <input
-                                    value={editAmount}
-                                    onChange={(ev) => setEditAmount(ev.target.value)}
-                                    disabled={busy}
-                                    style={{ width: 90 }}
-                                />
+                                <div style={{ display: "flex", gap: 6 }}>
+                                    <input
+                                        value={editAmount}
+                                        onChange={(ev) => setEditAmount(ev.target.value)}
+                                        disabled={busy}
+                                        style={{ width: "80%" }}
+                                    />
 
-                                <select 
-                                    value={editCurrency} 
-                                    onChange={(ev) => setEditCurrency(ev.target.value)}
-                                    disabled={busy}
-                                >
-                                    <option value="EUR">EUR</option>
-                                    <option value="USD">USD</option>
-                                    <option value="GBP">GBP</option>
-                                    <option value="CNY">CNY</option>
-                                    <option value="JPY">JPY</option>
-                                </select>
+                                    <select
+                                        value={editCurrency}
+                                        onChange={(ev) => setEditCurrency(ev.target.value)}
+                                        disabled={busy}
+                                    >
+                                        <option value="EUR">EUR</option>
+                                        <option value="USD">USD</option>
+                                        <option value="GBP">GBP</option>
+                                        <option value="CNY">CNY</option>
+                                        <option value="JPY">JPY</option>
+                                    </select>
+                                </div>
 
                                 <input
                                     value={editNote}
                                     onChange={(ev) => setEditNote(ev.target.value)}
                                     disabled={busy}
                                     placeholder="Note"
-                                    style={{ width: 180 }}
+                                    style={{
+                                        fontSize: 14,
+                                        width: "82%"
+                                    }}
                                 />
 
-                                <button
-                                    onClick={async () => {
-                                        if (!user) return;
+                                <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                                    <button
+                                        onClick={async () => {
+                                            if (!user) return;
 
-                                        const value = Number(editAmount);
-                                        if (!Number.isFinite(value) || value <= 0) {
-                                            setError('Amount must be a positive number.');
-                                            return;
-                                        }
-                                        if (!editCategoryId) {
-                                            setError('Please select a category.');
-                                            return;
-                                        }
-                                        if (!editOccurredAt) {
-                                            setError('Please select a date.');
-                                            return;
-                                        }
+                                            const value = Number(editAmount);
+                                            if (!Number.isFinite(value) || value <= 0) {
+                                                setError('Amount must be a positive number.');
+                                                return;
+                                            }
+                                            if (!editCategoryId) {
+                                                setError('Please select a category.');
+                                                return;
+                                            }
+                                            if (!editOccurredAt) {
+                                                setError('Please select a date.');
+                                                return;
+                                            }
 
-                                        setBusy(true);
-                                        setError(null);
+                                            setBusy(true);
+                                            setError(null);
 
-                                        try {
-                                            await updateExpense(e.id, {
-                                                amount: value,
-                                                currency: editCurrency,
-                                                categoryId: editCategoryId,
-                                                occurredAt: editOccurredAt,
-                                                note: editNote,
-                                            });
+                                            try {
+                                                await updateExpense(e.id, {
+                                                    amount: value,
+                                                    currency: editCurrency,
+                                                    categoryId: editCategoryId,
+                                                    occurredAt: editOccurredAt,
+                                                    note: editNote,
+                                                });
 
-                                            await reloadExpenses();
-                                            cancelEditExpense();
-                                        } catch (err: unknown) {
-                                            console.error(err);
-                                            setError('Failed to update expense.');
-                                        } finally {
-                                            setBusy(false);
-                                        }
-                                    }}
-                                    disabled={busy}
-                                >
-                                    Save
-                                </button>
+                                                await reloadExpenses();
+                                                cancelEditExpense();
+                                            } catch (err: unknown) {
+                                                console.error(err);
+                                                setError('Failed to update expense.');
+                                            } finally {
+                                                setBusy(false);
+                                            }
+                                        }}
+                                        disabled={busy}
+                                    >
+                                        Save
+                                    </button>
 
-                                <button onClick={cancelEditExpense} disabled={busy}>
-                                    Cancel
-                                </button>
+                                    <button onClick={cancelEditExpense} disabled={busy}>
+                                        Cancel
+                                    </button>
+                                </div>
                             </>
                         ) : (
                             <>
@@ -409,15 +454,49 @@ export function ExpensesPage() {
                                 <span style={{ minWidth: 120 }}>
                                     {categoryMap.get(e.categoryId) ?? 'Unknown category'}
                                 </span>
-                                <strong style={{ minWidth: 80 }}>{e.amount.toFixed(2)}</strong>
-                                 <strong style={{ minWidth: 80 }}>{e.currency}</strong>
-                                <span style={{ flex: 1, color: '#666' }}>{e.note}</span>
-                                <button onClick={() => startEdit(e)} disabled={busy}>
-                                    Edit
-                                </button>
-                                <button onClick={() => onDelete(e.id)} disabled={busy}>
-                                    Delete
-                                </button>
+                                <strong style={{ minWidth: 180 }}>
+                                    {(() => {
+                                        const base = normalizeCurrency(baseCurrency);
+                                        const from = normalizeCurrency(e.currency);
+                                        const conv = convertedById[e.id];
+
+                                        return (
+                                            <>
+                                                {e.amount.toFixed(2)} {from}
+                                                {from !== base && (
+                                                    <span style={{ color: "#666", marginLeft: 8 }}>
+                                                        {conv === undefined
+                                                            ? "(≈ ...)"
+                                                            : Number.isNaN(conv)
+                                                                ? "(≈ unavailable offline)"
+                                                                : `(≈ ${conv.toFixed(2)} ${base})`}
+                                                    </span>
+                                                )}
+                                            </>
+                                        );
+                                    })()}
+                                </strong>
+                                <span
+                                    title={e.note}
+                                    style={{
+                                        color: "#666",
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        whiteSpace: "nowrap",
+                                    }}
+                                >
+                                    {e.note}
+                                </span>
+
+
+                                <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                                    <button onClick={() => startEdit(e)} disabled={busy}>
+                                        Edit
+                                    </button>
+                                    <button onClick={() => onDelete(e.id)} disabled={busy}>
+                                        Delete
+                                    </button>
+                                </div>
                             </>
                         )}
                     </li>
