@@ -14,11 +14,11 @@ export function AppLayout() {
     const { user } = useAuth(); //current authenticated user
 
     return (
-        <div style={{ padding: 24, fontFamily: 'system-ui, sans-serif' }}>
+        <div style={{ maxWidth: 1000, margin: '0 auto', padding: 24, fontFamily: 'system-ui, sans-serif' }}>
             <header style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
                 <div>
                     <h1 style={{ margin: 0 }}>Expense Tracker</h1>
-                    <nav style={{ marginTop: 8 }}>
+                    <nav style={{ marginTop: 16 }}>
                         <NavLink to="/app/dashboard" style={linkStyle}>
                             Dashboard
                         </NavLink>

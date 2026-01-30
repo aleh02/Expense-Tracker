@@ -214,134 +214,151 @@ export function DashboardPage() {
     }, [savedBudget, savedBudgetCurrency, baseCurrency, month]);
 
     return (
-        <div>
+        <div style={{ marginTop: -18, maxWidth: 1100, padding: "24px 16px" }}>
             <h2>Dashboard</h2>
 
             <OfflineBanner />
 
-            <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 4 }}>
-                <p>
-                    Month
-                </p>
-                <input
-                    type="month"
-                    value={month}
-                    onChange={(e) => setMonth(e.target.value)}
-                    disabled={loading}
-                />
-            </div>
-
-            {loading && <p style={{ color: '#666' }}>Loading...</p>}
-            {error && <p style={{ color: 'crimson' }}>{error}</p>}
-
-            {!loading && !error && (
-                <>
-                    <h3 style={{ marginTop: 20 }}>Monthly Budget</h3>
-
-                    {savedBudget == null && !editingBudget && (
-                        <p style={{ color: '#666' }}>No budget set for this month.</p>
-                    )}
-
-                    <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 6 }}>
-                        {!editingBudget ? (
-                            <>
-                                <span>
-                                    {savedBudget == null ? (
-                                        <span style={{ color: '#666' }}>Not set</span>
-                                    ) : (
-                                        <div style={{ marginTop: 6 }}>
-                                            <p style={{ fontSize: 20, marginTop: 6 }}>
-                                                {savedBudget.toFixed(2)} {savedBudgetCurrency}
-                                            </p>
-
-                                            {normalizeCurrency(savedBudgetCurrency) !== normalizeCurrency(baseCurrency) && (
-                                                <p style={{ color: "#666", marginTop: 4 }}>
-                                                    ≈ {budgetBaseLoading ? "..." : `${(budgetBase ?? 0).toFixed(2)} ${baseCurrency}`} (converted)
-                                                </p>
-                                            )}
-                                        </div>
-                                    )}
-                                </span>
-
-                                <button onClick={onStartEditBudget} disabled={loading} style={{ marginBottom: 12 }}>
-                                    {savedBudget == null ? 'Set' : 'Edit'}
-                                </button>
-                            </>
-                        ) : (
-                            <>
-                                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                                    <input
-                                        placeholder={`e.g. 500 (${baseCurrency})`}
-                                        value={budgetInput}
-                                        onChange={(e) => setBudgetInput(e.target.value)}
-                                        disabled={loading}
-                                        style={{ width: 160 }}
-                                    />
-                                    <span style={{ color: "#666", minWidth: 48 }}>{baseCurrency}</span>
-                                </div>
-                                <button onClick={onSaveBudget} disabled={loading}>
-                                    {loading ? 'Working...' : 'Save'}
-                                </button>
-                                {savedBudget != null && (
-                                    <button onClick={onCancelEditBudget} disabled={loading}>
-                                        Cancel
-                                    </button>
-                                )}
-                            </>
-                        )}
+            <div style={{ display: "grid", gap: 14, marginTop: 14, maxWidth: 720 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{ fontSize: 18, fontWeight: 600, minWidth: 60, marginLeft: 6 }}>
+                        Month
                     </div>
+                    <input
+                        type="month"
+                        value={month}
+                        onChange={(e) => setMonth(e.target.value)}
+                        disabled={loading}
+                        style={{ height: 32, padding: "0px 10px", borderRadius: 10 }}
+                    />
+                </div>
 
-                    <h3 style={{ marginTop: 16 }}>Monthly Total ({baseCurrency})</h3>
-                    {totalsLoading ? (
-                        <p style={{ color: '#666' }}>Loading...</p>
-                    ) : (
-                        <p style={{ fontSize: 20, marginTop: 6 }}>
-                            {totalMonthBase.toFixed(2)}
-                        </p>
-                    )
-                    }
+                {loading && <p style={{ color: "#666", margin: 0 }}>Loading...</p>}
+                {error && <p style={{ color: "crimson", margin: 0 }}>{error}</p>}
 
-                    {savedBudget != null && !totalsLoading && (
-                        <p style={{ marginTop: 6, color: totalMonthBase >= savedBudget ? "crimson" : "#666" }}>
-                            {totalMonthBase >= savedBudget
-                                ? `Over budget by ${(totalMonthBase - savedBudget).toFixed(2)} ${baseCurrency}.`
-                                : `Remaining ${(savedBudget - totalMonthBase).toFixed(2)} ${baseCurrency}.`}
-                        </p>
-                    )}
+                {!loading && !error && (
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                        {/* Budget card */}
+                        <div style={{
+                            padding: 14,
+                            border: "1px solid rgba(255,255,255,0.08)",
+                            borderRadius: 14,
+                            background: "rgba(255,255,255,0.03)",
+                        }}>
+                            <div style={{ fontWeight: 700, marginBottom: 10 }}>Monthly Budget</div>
 
+                            {!editingBudget ? (
+                                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+                                    <div>
+                                        {savedBudget == null ? (
+                                            <div style={{ color: "#666" }}>Not set</div>
+                                        ) : (
+                                            <>
+                                                <div style={{ fontSize: 20, fontWeight: 700, marginTop: 3 }}>
+                                                    {savedBudget.toFixed(2)} {savedBudgetCurrency}
+                                                </div>
 
-                    <h3 style={{ marginTop: 16 }}>By Category ({baseCurrency})</h3>
-                    {totalsLoading && <p style={{ color: '#666' }}>Loading...</p>}
-                    <ul style={{ marginTop: 16 }}>
-                        {totalsByCategory.map((t) => (
-                            <li
-                                key={t.categoryId}
-                                style={{
-                                    display: 'flex',
-                                    gap: 10,
-                                    alignItems: 'center',
-                                    padding: 10,
-                                    border: '1px solid rgba(255,255,255,0.08)',
-                                    borderRadius: 10,
-                                    maxWidth: 350,
-                                }}
-                            >
-                                <CategoryDonut value={t.total} total={totalMonthBase} size={52} />
-                                <div style={{ flex: 1 }}>
-                                    <div style={{ fontWeight: 600 }}>{t.name}</div>
-                                    <div style={{ color: '#666', marginTop: 2 }}>
-                                        {t.total.toFixed(2)}
+                                                {normalizeCurrency(savedBudgetCurrency) !== normalizeCurrency(baseCurrency) && (
+                                                    <div style={{ color: "#666", marginTop: 4 }}>
+                                                        ≈ {budgetBaseLoading ? "..." : `${(budgetBase ?? 0).toFixed(2)} ${baseCurrency}`} (converted)
+                                                    </div>
+                                                )}
+                                            </>
+                                        )}
+                                    </div>
+                                    <div style={{ marginTop: -1 }}>
+                                        <button onClick={onStartEditBudget} disabled={loading}>
+                                            {savedBudget == null ? "Set" : "Edit"}
+                                        </button>
                                     </div>
                                 </div>
-                            </li>
-                        ))}
-                    </ul>
+                            ) : (
+                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                                        <input
+                                            placeholder={`e.g. 500 (${baseCurrency})`}
+                                            value={budgetInput}
+                                            onChange={(e) => setBudgetInput(e.target.value)}
+                                            disabled={loading}
+                                            style={{ width: 160, height: 32, padding: "4px 10px", borderRadius: 10 }}
+                                        />
+                                        <span style={{ color: "#666", minWidth: 48 }}>{baseCurrency}</span>
+                                    </div>
 
-                    {expenses.length === 0 && (
-                        <p style={{ color: '#666' }}>No expenses for this month.</p>
-                    )}
-                </>
+                                    <div style={{ display: "flex", gap: 8 }}>
+                                        <button onClick={onSaveBudget} disabled={loading}>
+                                            {loading ? "Working..." : "Save"}
+                                        </button>
+                                        {savedBudget != null && (
+                                            <button onClick={onCancelEditBudget} disabled={loading}>
+                                                Cancel
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Total card */}
+                        <div style={{
+                            padding: 14,
+                            border: "1px solid rgba(255,255,255,0.08)",
+                            borderRadius: 14,
+                            background: "rgba(255,255,255,0.03)",
+                        }}>
+                            <div style={{ fontWeight: 700, marginBottom: 10 }}>Monthly Total</div>
+
+                            {totalsLoading ? (
+                                <div style={{ color: "#666" }}>Loading...</div>
+                            ) : (
+                                <div style={{ fontSize: 20, fontWeight: 700 }}>
+                                    {totalMonthBase.toFixed(2)} {baseCurrency}
+                                </div>
+                            )}
+
+                            {savedBudget != null && !totalsLoading && (
+                                <div style={{ marginTop: 8, color: totalMonthBase >= savedBudget ? "crimson" : "#666" }}>
+                                    {totalMonthBase >= savedBudget
+                                        ? `Over budget by ${(totalMonthBase - savedBudget).toFixed(2)} ${baseCurrency}.`
+                                        : `Remaining ${(savedBudget - totalMonthBase).toFixed(2)} ${baseCurrency}.`}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            <h3 style={{ fontSize: 21, marginTop: 32 }}>By Category ({baseCurrency})</h3>
+            {totalsLoading && <p style={{ color: '#666' }}>Loading...</p>}
+            <div style={{ maxWidth: 700, marginTop: 16 }}>
+                <ul style={{ marginTop: 16 }}>
+                    {totalsByCategory.map((t) => (
+                        <li
+                            key={t.categoryId}
+                            style={{
+                                gap: 32,
+                                alignItems: 'center',
+                                padding: 10,
+                                border: '1px solid rgba(255,255,255,0.08)',
+                                borderRadius: 10,
+                                display: "grid",
+                                gridTemplateColumns: "1fr 1fr 1fr"
+                            }}
+                        >
+                            <div style={{ fontSize: 20, fontWeight: 600, marginLeft: 20, textAlign: 'left' }}>{t.name}</div>
+                            <div style={{ fontSize: 20, color: '#666', marginLeft: 35, textAlign: 'left' }}>{t.total.toFixed(2)} ({baseCurrency})</div>
+                            <div style={{ marginLeft: 100 }}>
+                                <CategoryDonut value={t.total} total={totalMonthBase} size={52} />
+                            </div>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+
+
+            {expenses.length === 0 && (
+                <p style={{ color: '#666' }}>No expenses for this month.</p>
             )}
         </div>
-    )
+    );
 }

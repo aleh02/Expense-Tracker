@@ -10,6 +10,7 @@ import { sendBudgetAlert } from '../../notifications/push.service';
 import { getProfile } from '../../settings/profile.service';
 import { normalizeCurrency } from '../../../shared/utils/currency';
 import { convertAmount } from '../../../shared/services/fx.service';
+import styles from "./ExpensesPage.module.css";
 
 //Today's date as YYYY-MM-DD (local)
 function todayYmd(): string {
@@ -247,51 +248,53 @@ export function ExpensesPage() {
         return (
             <div>
                 <h2>Expenses</h2>
-                <p style={{ color: '#666' }}>Loading...</p>
+                <p className={styles.muted}>Loading...</p>
             </div>
         );
     }
 
     return (
-        <div>
+        <div className={styles.page}>
             <h2>Expenses</h2>
-
             <OfflineBanner />
 
-            <p style={{ color: '#666', marginTop: 4 }}>
+            <p className={styles.subtitle}>
                 Add expenses and track them by date and category.
             </p>
 
             {categories.length === 0 ? (
-                <p style={{ color: 'crimson' }}>
+                <p className={styles.error}>
                     You need at least one category before adding expenses.
                 </p>
             ) : (
-                <div style={{ display: 'grid', gap: 8, maxWidth: 520, marginTop: 12 }}>
-                    <label>
-                        Amount
-                        <input
-                            placeholder="e.g. 12.50"
-                            value={amount}
-                            onChange={(e) => setAmount(e.target.value)}
-                            disabled={busy}
-                        />
-                    </label>
+                <div className={styles.card}>
+                    <div className={styles.formGrid}>
+                        <div className={styles.label}>Amount</div>
+                        <div className={styles.inlineRow}>
+                            <input
+                                className={styles.control}
+                                placeholder="e.g. 12.50"
+                                value={amount}
+                                onChange={(e) => setAmount(e.target.value)}
+                                disabled={busy}
+                            />
+                            <select
+                                className={styles.control}
+                                value={currency}
+                                onChange={(e) => setCurrency(e.target.value)}
+                                disabled={busy}
+                            >
+                                <option value="EUR">EUR</option>
+                                <option value="USD">USD</option>
+                                <option value="GBP">GBP</option>
+                                <option value="CNY">CNY</option>
+                                <option value="JPY">JPY</option>
+                            </select>
+                        </div>
 
-                    <label>
-                        Currency
-                        <select value={currency} onChange={(e) => setCurrency(e.target.value)}>
-                            <option value="EUR">EUR</option>
-                            <option value="USD">USD</option>
-                            <option value="GBP">GBP</option>
-                            <option value="CNY">CNY</option>
-                            <option value="JPY">JPY</option>
-                        </select>
-                    </label>
-
-                    <label>
-                        Category
+                        <div className={styles.label}>Category</div>
                         <select
+                            className={styles.control}
                             value={categoryId}
                             onChange={(e) => setCategoryId(e.target.value)}
                             disabled={busy}
@@ -302,49 +305,45 @@ export function ExpensesPage() {
                                 </option>
                             ))}
                         </select>
-                    </label>
 
-                    <label>
-                        Date
+                        <div className={styles.label}>Date</div>
                         <input
+                            className={styles.control}
                             type="date"
                             value={occurredAt}
                             onChange={(e) => setOccurredAt(e.target.value)}
                             disabled={busy}
                         />
-                    </label>
 
-                    <label>
-                        Note (optional)
+                        <div className={styles.label}>Note (optional)</div>
                         <input
+                            className={styles.control}
                             placeholder="e.g. lunch with friends"
                             value={note}
                             onChange={(e) => setNote(e.target.value)}
                             disabled={busy}
                         />
-                    </label>
 
-                    <button onClick={onAdd} disabled={busy || categories.length === 0}>
-                        {busy ? 'Working...' : 'Add expense'}
-                    </button>
+                        <div className={styles.actionsRow}>
+                            <button
+                                className={styles.primaryBtn}
+                                onClick={onAdd}
+                                disabled={busy || categories.length === 0}
+                            >
+                                {busy ? "Working..." : "Add expense"}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
 
-            {error && <p style={{ color: 'crimson' }}>{error}</p>}
+            {error && <p className={styles.error}>{error}</p>}
 
-            <h3 style={{ marginTop: 20 }}>Recent expenses</h3>
+            <h3 style={{ marginTop: 20, marginBottom: 0 }}>Recent expenses</h3>
 
-            <ul style={{ marginTop: 8 }}>
+            <ul className={styles.list}>
                 {expenses.map((e) => (
-                    <li
-                        key={e.id}
-                        style={{
-                            display: "grid",
-                            gridTemplateColumns: "110px 130px minmax(200px, 220px) minmax(50px, 100px) 140px",
-                            gap: 12,
-                            alignItems: "center",
-                        }}
-                    >
+                    <li key={e.id} className={styles.row}>
                         {editingId === e.id ? (
                             <>
                                 <input
@@ -366,12 +365,12 @@ export function ExpensesPage() {
                                     ))}
                                 </select>
 
-                                <div style={{ display: "flex", gap: 6 }}>
+                                <div className={styles.inline} style={{ gap: 6 }}>
                                     <input
                                         value={editAmount}
                                         onChange={(ev) => setEditAmount(ev.target.value)}
                                         disabled={busy}
-                                        style={{ width: "80%" }}
+                                        style={{ width: "99%" }}
                                     />
 
                                     <select
@@ -392,13 +391,10 @@ export function ExpensesPage() {
                                     onChange={(ev) => setEditNote(ev.target.value)}
                                     disabled={busy}
                                     placeholder="Note"
-                                    style={{
-                                        fontSize: 14,
-                                        width: "82%"
-                                    }}
+                                    className={styles.noteInput}
                                 />
 
-                                <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                                <div className={styles.actions}>
                                     <button
                                         onClick={async () => {
                                             if (!user) return;
@@ -464,7 +460,7 @@ export function ExpensesPage() {
                                             <>
                                                 {e.amount.toFixed(2)} {from}
                                                 {from !== base && (
-                                                    <span style={{ color: "#666", marginLeft: 8 }}>
+                                                    <span className={styles.conv}>
                                                         {conv === undefined
                                                             ? "(≈ ...)"
                                                             : Number.isNaN(conv)
@@ -476,21 +472,12 @@ export function ExpensesPage() {
                                         );
                                     })()}
                                 </strong>
-                                <span
-                                    title={e.note}
-                                    style={{
-                                        color: "#666",
-                                        overflow: "hidden",
-                                        textOverflow: "ellipsis",
-                                        whiteSpace: "nowrap",
-                                        width: "82%"
-                                    }}
-                                >
+                                <span title={e.note} className={styles.noteCell}>
                                     {e.note}
                                 </span>
 
 
-                                <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                                <div className={styles.actions}>
                                     <button onClick={() => startEdit(e)} disabled={busy}>
                                         Edit
                                     </button>
@@ -504,7 +491,7 @@ export function ExpensesPage() {
                 ))}
             </ul>
 
-            {expenses.length === 0 && <p style={{ color: '#666' }}>No expenses yet.</p>}
+            {expenses.length === 0 && <p className={styles.muted}>No expenses yet.</p>}
         </div>
     );
 }

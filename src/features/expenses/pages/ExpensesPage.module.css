@@ -1,0 +1,134 @@
+.page {
+  max-width: 1100px;
+  margin: 0 auto;
+  margin-top: -18px;
+  padding: 24px 16px;
+  display: grid;
+  gap: 18px;
+}
+
+
+.muted {
+    color: #666;
+}
+
+.error {
+    color: crimson;
+}
+
+.list {
+    margin-top: 8px;
+    display: grid;
+    gap: 10px;
+}
+
+.row {
+    display: grid;
+    grid-template-columns: 110px 110px minmax(120px, 220px) 1fr 150px;
+    gap: 20px;
+    align-items: center;
+}
+
+.noteCell {
+    color: #666;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+}
+
+.actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+}
+
+.inline {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    min-width: 0;
+}
+
+.noteInput {
+    font-size: 14px;
+    width: 70%;
+}
+
+.conv {
+    color: #666;
+    margin-left: 8px;
+}
+
+.headerRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.subtitle {
+  color: #888;
+  margin-top: -24px;
+  max-width: 720px;
+}
+
+.card {
+  margin-top: -8px;
+  padding: 14px;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  background: rgba(255,255,255,0.03);
+  width: 100%;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 160px minmax(0, 1fr);
+  gap: 10px 12px;
+  align-items: center;
+}
+
+.label {
+  color: #ddd;
+  font-weight: 600;
+}
+
+.control {
+  width: 100%;
+  min-width: 0; /* important */
+  box-sizing: border-box;
+  height: 32px;
+  padding: 4px 10px;
+}
+
+.actionsRow {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 2px;
+}
+
+.primaryBtn {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  cursor: pointer;
+}
+
+.primaryBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.inlineRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 130px;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+}
