@@ -31,6 +31,7 @@ export async function listExpenses(userId: string) {
         collection(db, EXPENSES_COL),
         where('userId', '==', userId),
         orderBy('occurredAt', 'desc'),
+        orderBy('createdAt', 'desc')
     );
 
     const snap = await getDocs(q);
@@ -85,6 +86,7 @@ export async function listExpensesInMonth(userId: string, month: string): Promis
         where('occurredAt', '>=', start),
         where('occurredAt', '<', endExclusive),
         orderBy('occurredAt', 'desc'),
+        orderBy('createdAt', 'desc')
     );
 
     const snap = await getDocs(q);

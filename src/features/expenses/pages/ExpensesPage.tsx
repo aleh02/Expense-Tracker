@@ -340,7 +340,7 @@ export function ExpensesPage() {
                         key={e.id}
                         style={{
                             display: "grid",
-                            gridTemplateColumns: "110px 130px minmax(200px, 220px) 1fr 140px",
+                            gridTemplateColumns: "110px 130px minmax(200px, 220px) minmax(50px, 100px) 140px",
                             gap: 12,
                             alignItems: "center",
                         }}
@@ -483,6 +483,7 @@ export function ExpensesPage() {
                                         overflow: "hidden",
                                         textOverflow: "ellipsis",
                                         whiteSpace: "nowrap",
+                                        width: "82%"
                                     }}
                                 >
                                     {e.note}
