@@ -45,9 +45,15 @@ export function DashboardPage() {
     //loads base currency
     useEffect(() => {
         if (!user) return;
+
         (async () => {
-            const p = await getProfile(user.uid);
-            setBaseCurrency(p.baseCurrency);
+            try {
+                const p = await getProfile(user.uid);
+                setBaseCurrency(p?.baseCurrency ?? "EUR");
+            } catch (e) {
+                console.warn("getProfile failed, fallback to EUR", e);
+                setBaseCurrency("EUR");
+            }
         })();
     }, [user?.uid]);
 
@@ -81,14 +87,17 @@ export function DashboardPage() {
                     setEditingBudget(false);
                 } else {
                     setSavedBudget(null);
-                    setSavedBudgetCurrency(baseCurrency);
+                    setSavedBudgetCurrency(normalizeCurrency(baseCurrency));
                     setBudgetInput('');
                     setEditingBudget(true);
                 }
-            } catch (e: unknown) {
-                console.error(e);
+            } catch (e: any) {
+                console.error("Dashboard load failed:", e);
+                console.log("Firestore error code:", e?.code);
+                console.log("Firestore error message:", e?.message);
                 if (!cancelled) setError('Failed to load dashboard data.');
-            } finally {
+            }
+            finally {
                 if (!cancelled) setLoading(false);
             }
         })();

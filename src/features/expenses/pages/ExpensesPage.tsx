@@ -389,6 +389,9 @@ export function ExpensesPage() {
             {error && <p className={styles.error}>{error}</p>}
 
             <h3 style={{ marginTop: 20, marginBottom: 0 }}>Recent expenses</h3>
+            <p className={styles.muted} style={{ marginTop: 0, marginBottom: 0 }}>
+                Expenses in other currencies are converted using the exchange rate of the expense date.
+            </p>
 
             <ul className={styles.list}>
                 {expenses.map((e) => (
