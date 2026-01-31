@@ -34,6 +34,7 @@ export function DashboardPage() {
 
     const [budgetBase, setBudgetBase] = useState<number | null>(null);
     const [budgetBaseLoading, setBudgetBaseLoading] = useState(false);
+    const [savingBudget, setSavingBudget] = useState(false);
 
     const [baseCurrency, setBaseCurrency] = useState('EUR');
 
@@ -89,7 +90,7 @@ export function DashboardPage() {
                     setSavedBudget(null);
                     setSavedBudgetCurrency(normalizeCurrency(baseCurrency));
                     setBudgetInput('');
-                    setEditingBudget(true);
+                    setEditingBudget(false);
                 }
             } catch (e: any) {
                 console.error("Dashboard load failed:", e);
@@ -159,7 +160,6 @@ export function DashboardPage() {
 
     function onStartEditBudget() {
         setBudgetInput(savedBudget == null ? '' : String(savedBudget));
-        setSavedBudgetCurrency(baseCurrency);
         setEditingBudget(true);
     }
 
@@ -178,7 +178,7 @@ export function DashboardPage() {
             return;
         }
 
-        setLoading(true);
+        setSavingBudget(true);
         setError(null);
 
         try {
@@ -190,7 +190,7 @@ export function DashboardPage() {
             console.error(e);
             setError('Failed to save budget.');
         } finally {
-            setLoading(false);
+            setSavingBudget(false);
         }
     }
 
@@ -257,7 +257,7 @@ export function DashboardPage() {
                 {error && <p className={styles.danger} style={{ margin: 0 }}>{error}</p>}
 
                 {!loading && !error && (
-                    <div style={{ marginTop: 4, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                    <div className={styles.twoCol} style={{ marginTop: 4 }}>
                         <div
                             className={styles.card}
                             style={{
@@ -309,7 +309,7 @@ export function DashboardPage() {
                                     </div>
                                 </div>
                             ) : (
-                                <form onSubmit={handleSubmit} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                                <form onSubmit={handleSubmit} style={{ maxWidth: 330, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 4 }}>
                                     <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                                         <input
                                             className={styles.input}
@@ -317,7 +317,7 @@ export function DashboardPage() {
                                             value={budgetInput}
                                             onChange={(e) => setBudgetInput(e.target.value)}
                                             disabled={loading}
-                                            style={{ width: 120, height: 32, padding: "4px 10px", borderRadius: 10 }}
+                                            style={{ width: 100, height: 32, padding: "4px 10px", borderRadius: 10 }}
                                             autoFocus
                                             onKeyDown={(e) => {
                                                 if (e.key === "Escape") {
@@ -335,23 +335,21 @@ export function DashboardPage() {
                                         <button
                                             className={`${styles.btn} ${styles.btnPrimary}`}
                                             type="submit"
-                                            disabled={loading}
+                                            disabled={loading || savingBudget}
                                             style={{ height: 32, padding: "0 12px", borderRadius: 10 }}
                                         >
-                                            {loading ? "Working..." : "Save"}
+                                            {loading ? "Saving..." : "Save"}
                                         </button>
 
-                                        {savedBudget != null && (
-                                            <button
-                                                className={styles.btn}
-                                                type="button"
-                                                onClick={onCancelEditBudget}
-                                                disabled={loading}
-                                                style={{ height: 32, padding: "0 12px", borderRadius: 10 }}
-                                            >
-                                                Cancel
-                                            </button>
-                                        )}
+                                        <button
+                                            className={styles.btn}
+                                            type="button"
+                                            onClick={onCancelEditBudget}
+                                            disabled={loading || savingBudget}
+                                            style={{ height: 32, padding: "0 12px", borderRadius: 10 }}
+                                        >
+                                            Cancel
+                                        </button>
                                     </div>
                                 </form>
                             )}

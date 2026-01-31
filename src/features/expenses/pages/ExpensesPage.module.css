@@ -186,3 +186,19 @@
   color: rgba(233, 233, 234, 0.55);
   margin-left: 8px;
 }
+
+@media (max-width: 720px) {
+  .row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 12px;
+  }
+
+  .actions {
+    justify-content: flex-start;
+  }
+
+  .noteCell {
+    white-space: normal;
+  }
+}
