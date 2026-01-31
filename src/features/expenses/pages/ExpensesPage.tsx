@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import type { Category, Expense } from '../../../shared/types/models';
 import { useAuth } from '../../auth/auth.context';
 import { listCategories } from '../../categories/categories.service';
@@ -185,6 +185,11 @@ export function ExpensesPage() {
         }
     }
 
+    function handleAdd(e: React.FormEvent) {
+        e.preventDefault();
+        onAdd();
+    }
+
     async function onDelete(id: string) {
         setBusy(true);
         setError(null);
@@ -217,6 +222,50 @@ export function ExpensesPage() {
         setEditOccurredAt('');
         setEditNote('');
     }
+
+    async function onSaveEditExpense(id: string) {
+        if (!user) return;
+
+        const value = Number(editAmount);
+        if (!Number.isFinite(value) || value <= 0) {
+            setError("Amount must be a positive number.");
+            return;
+        }
+        if (!editCategoryId) {
+            setError("Please select a category.");
+            return;
+        }
+        if (!editOccurredAt) {
+            setError("Please select a date.");
+            return;
+        }
+
+        setBusy(true);
+        setError(null);
+
+        try {
+            await updateExpense(id, {
+                amount: value,
+                currency: editCurrency,
+                categoryId: editCategoryId,
+                occurredAt: editOccurredAt,
+                note: editNote,
+            });
+            await reloadExpenses();
+            cancelEditExpense();
+        } catch (err: unknown) {
+            console.error(err);
+            setError("Failed to update expense.");
+        } finally {
+            setBusy(false);
+        }
+    }
+
+    function handleEditSubmit(e: React.FormEvent, id: string) {
+        e.preventDefault();
+        onSaveEditExpense(id);
+    }
+
 
     //converts expenses in different currencies
     useEffect(() => {
@@ -268,7 +317,7 @@ export function ExpensesPage() {
                 </p>
             ) : (
                 <div className={styles.card}>
-                    <div className={styles.formGrid}>
+                    <form onSubmit={handleAdd} className={styles.formGrid}>
                         <div className={styles.label}>Amount</div>
                         <div className={styles.inlineRow}>
                             <input
@@ -327,13 +376,13 @@ export function ExpensesPage() {
                         <div className={styles.actionsRow}>
                             <button
                                 className={styles.primaryBtn}
-                                onClick={onAdd}
+                                type="submit"
                                 disabled={busy || categories.length === 0}
                             >
                                 {busy ? "Working..." : "Add expense"}
                             </button>
                         </div>
-                    </div>
+                    </form>
                 </div>
             )}
 
@@ -345,8 +394,18 @@ export function ExpensesPage() {
                 {expenses.map((e) => (
                     <li key={e.id} className={styles.row}>
                         {editingId === e.id ? (
-                            <>
+                            <form
+                                onSubmit={(ev) => handleEditSubmit(ev, e.id)}
+                                style={{ display: "contents" }}
+                                onKeyDown={(ev) => {
+                                    if (ev.key === "Escape") {
+                                        ev.preventDefault();
+                                        cancelEditExpense();
+                                    }
+                                }}
+                            >
                                 <input
+                                    className={styles.control}
                                     type="date"
                                     value={editOccurredAt}
                                     onChange={(ev) => setEditOccurredAt(ev.target.value)}
@@ -354,6 +413,7 @@ export function ExpensesPage() {
                                 />
 
                                 <select
+                                    className={styles.control}
                                     value={editCategoryId}
                                     onChange={(ev) => setEditCategoryId(ev.target.value)}
                                     disabled={busy}
@@ -367,13 +427,16 @@ export function ExpensesPage() {
 
                                 <div className={styles.inline} style={{ gap: 6 }}>
                                     <input
+                                        className={styles.control}
                                         value={editAmount}
                                         onChange={(ev) => setEditAmount(ev.target.value)}
                                         disabled={busy}
                                         style={{ width: "99%" }}
+                                        autoFocus
                                     />
 
                                     <select
+                                        className={styles.control}
                                         value={editCurrency}
                                         onChange={(ev) => setEditCurrency(ev.target.value)}
                                         disabled={busy}
@@ -396,54 +459,23 @@ export function ExpensesPage() {
 
                                 <div className={styles.actions}>
                                     <button
-                                        onClick={async () => {
-                                            if (!user) return;
-
-                                            const value = Number(editAmount);
-                                            if (!Number.isFinite(value) || value <= 0) {
-                                                setError('Amount must be a positive number.');
-                                                return;
-                                            }
-                                            if (!editCategoryId) {
-                                                setError('Please select a category.');
-                                                return;
-                                            }
-                                            if (!editOccurredAt) {
-                                                setError('Please select a date.');
-                                                return;
-                                            }
-
-                                            setBusy(true);
-                                            setError(null);
-
-                                            try {
-                                                await updateExpense(e.id, {
-                                                    amount: value,
-                                                    currency: editCurrency,
-                                                    categoryId: editCategoryId,
-                                                    occurredAt: editOccurredAt,
-                                                    note: editNote,
-                                                });
-
-                                                await reloadExpenses();
-                                                cancelEditExpense();
-                                            } catch (err: unknown) {
-                                                console.error(err);
-                                                setError('Failed to update expense.');
-                                            } finally {
-                                                setBusy(false);
-                                            }
-                                        }}
+                                        className={styles.primaryBtn}
+                                        type="submit"
                                         disabled={busy}
                                     >
                                         Save
                                     </button>
 
-                                    <button onClick={cancelEditExpense} disabled={busy}>
+                                    <button
+                                        className={styles.btn}
+                                        type="button"
+                                        onClick={cancelEditExpense}
+                                        disabled={busy}
+                                    >
                                         Cancel
                                     </button>
                                 </div>
-                            </>
+                            </form>
                         ) : (
                             <>
                                 <span style={{ minWidth: 110 }}>{e.occurredAt}</span>
@@ -478,10 +510,10 @@ export function ExpensesPage() {
 
 
                                 <div className={styles.actions}>
-                                    <button onClick={() => startEdit(e)} disabled={busy}>
+                                    <button className={styles.btn} onClick={() => startEdit(e)} disabled={busy}>
                                         Edit
                                     </button>
-                                    <button onClick={() => onDelete(e.id)} disabled={busy}>
+                                    <button className={styles.btn} onClick={() => onDelete(e.id)} disabled={busy}>
                                         Delete
                                     </button>
                                 </div>

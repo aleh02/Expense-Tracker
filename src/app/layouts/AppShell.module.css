@@ -1,0 +1,177 @@
+.page {
+    min-height: 100vh;
+    background: #0f1115;
+    color: #e9e9ea;
+    font-family: system-ui, sans-serif;
+}
+
+.hrTop {
+    border-top: 1px solid rgba(255, 255, 255, 0.10);
+    padding-top: 16px;
+}
+
+.h1 {
+    margin: 0;
+    font-size: 44px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+}
+
+.navLink {
+    color: rgba(233, 233, 234, 0.75);
+    text-decoration: none;
+    font-size: 14px;
+    margin-right: 14px;
+}
+
+.navLink:hover {
+    color: #e9e9ea;
+}
+
+.navLinkActive {
+    color: #e9e9ea;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 6px;
+}
+
+.userEmail {
+    font-size: 12px;
+    color: rgba(233, 233, 234, 0.55);
+}
+
+.card {
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    background: #151821;
+}
+
+.input {
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    background: #0f1115;
+    color: #e9e9ea;
+    outline: none;
+}
+
+.input:focus {
+    border-color: rgba(255, 255, 255, 0.22);
+    background: #0c0e12;
+}
+
+.btn {
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: transparent;
+    color: #e9e9ea;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.btn:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.muted {
+    color: rgba(233, 233, 234, 0.55);
+}
+
+.listItem {
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+/* Dashboard style helpers */
+.h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+}
+
+.label {
+  color: rgba(233, 233, 234, 0.85);
+}
+
+.muted {
+  color: rgba(233, 233, 234, 0.55);
+}
+
+.card {
+  background: #151821;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+}
+
+.cardTitle {
+  color: rgba(233, 233, 234, 0.92);
+}
+
+.input {
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: #0f1115;
+  color: #e9e9ea;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.input::placeholder {
+  color: rgba(233, 233, 234, 0.42);
+}
+
+.input:focus {
+  border-color: rgba(255, 255, 255, 0.22);
+  background: #0c0e12;
+}
+
+.btn {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+  color: #e9e9ea;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btnPrimary {
+  background: #e9e9ea;
+  color: #0f1115;
+  border-color: rgba(255, 255, 255, 0.10);
+}
+
+.btnPrimary:hover {
+  background: #f2f2f2;
+}
+
+.listItem {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.danger {
+  color: #ff6b6b;
+}

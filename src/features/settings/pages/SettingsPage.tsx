@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useAuth } from "../../auth/auth.context";
 import { enablePushNotifications, sendBudgetAlert } from "../../notifications/push.service";
 import { getProfile, setBaseCurrency } from "../profile.service";
+import { updatePassword } from "firebase/auth";
+import styles from "../../../app/layouts/AppShell.module.css";
 
 async function getCurrentSubscription(): Promise<PushSubscription | null> {
     if (!('serviceWorker' in navigator)) return null;
@@ -17,6 +19,15 @@ export function SettingsPage() {
     const [pushEnabled, setPushEnabled] = useState(false);
 
     const [baseCurrency, setBaseCurrencyState] = useState('EUR');
+
+    const [newPassword, setNewPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [pwMsg, setPwMsg] = useState<string | null>(null);
+    const [pwErr, setPwErr] = useState<string | null>(null);
+
+    const isGoogleUser = user?.providerData?.some(p => p.providerId === "google.com") ?? false;
+    const isPasswordUser = user?.providerData?.some(p => p.providerId === "password") ?? false;
+
 
     //detects current push state
     useEffect(() => {
@@ -118,28 +129,59 @@ export function SettingsPage() {
         }
     }
 
+    async function onChangePassword() {
+        setPwErr(null);
+        setPwMsg(null);
+
+        if (!user) return setPwErr("You must be signed in.");
+
+        if (newPassword.length < 6) return setPwErr("Password must be at least 6 characters.");
+        if (newPassword !== confirmPassword) return setPwErr("Passwords do not match.");
+
+        try {
+            setLoading(true);
+            await updatePassword(user, newPassword);
+            setPwMsg("Password updated.");
+            setNewPassword("");
+            setConfirmPassword("");
+        } catch (e: any) {
+            if (e?.code === "auth/requires-recent-login") {
+                setPwErr("Please log in again, then retry changing your password.");
+            } else {
+                setPwErr("Failed to update password.");
+            }
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    function handleSubmit(e: React.FormEvent) {
+        e.preventDefault();
+        onSaveCurrency();
+    }
+
     return (
         <div style={{ marginTop: -18, maxWidth: 1100, padding: "24px 16px" }}>
-            <h2>Settings</h2>
+            <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800 }}>Settings</h2>
 
-            <p style={{ color: "#888", marginTop: -4 }}>
+            <p className={styles.muted} style={{ marginTop: -4 }}>
                 Manage currency, notification permissions and test push delivery.
             </p>
 
             <div
+                className={styles.card}
                 style={{
                     marginTop: 14,
                     padding: 14,
-                    border: "1px solid rgba(255,255,255,0.08)",
                     borderRadius: 14,
-                    background: "rgba(255,255,255,0.03)",
                     maxWidth: 700,
                 }}
             >
                 <h3 style={{ marginTop: 0 }}>Currency</h3>
 
-                <div style={{ display: "flex", gap: 10, alignItems: "center", marginTop: 12 }}>
+                <form onSubmit={handleSubmit} style={{ display: "flex", gap: 10, alignItems: "center", marginTop: 12 }}>
                     <select
+                        className={styles.input}
                         value={baseCurrency}
                         onChange={(e) => setBaseCurrencyState(e.target.value)}
                         disabled={loading}
@@ -151,6 +193,12 @@ export function SettingsPage() {
                             borderRadius: 10,
                             boxSizing: "border-box",
                         }}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                e.preventDefault();
+                                onSaveCurrency();
+                            }
+                        }}
                     >
                         <option value="EUR">EUR</option>
                         <option value="USD">USD</option>
@@ -159,19 +207,29 @@ export function SettingsPage() {
                         <option value="JPY">JPY</option>
                     </select>
 
-                    <button onClick={onSaveCurrency} disabled={loading} style={{ height: 36 }}>
+                    <button
+                        className={`${styles.btn} ${styles.btnPrimary}`}
+                        type="submit"
+                        disabled={loading}
+                        style={{ height: 36, padding: "0 14px", borderRadius: 10 }}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                e.preventDefault();
+                                onSaveCurrency();
+                            }
+                        }}
+                    >
                         {loading ? "Working..." : "Save"}
                     </button>
-                </div>
+                </form>
             </div>
 
             <div
+                className={styles.card}
                 style={{
                     marginTop: 20,
                     padding: 14,
-                    border: "1px solid rgba(255,255,255,0.08)",
                     borderRadius: 14,
-                    background: "rgba(255,255,255,0.03)",
                     maxWidth: 700,
                 }}
             >
@@ -179,29 +237,94 @@ export function SettingsPage() {
 
                 <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 10, marginBottom: 4 }}>
                     {pushEnabled ? (
-                        <button onClick={onDisablePush} disabled={loading} style={{ height: 36 }}>
+                        <button
+                            className={styles.btn}
+                            onClick={onDisablePush}
+                            disabled={loading}
+                            style={{ height: 36, padding: "0 14px", borderRadius: 10 }}
+                        >
                             {loading ? "Working..." : "Disable notifications"}
                         </button>
                     ) : (
-                        <button onClick={onEnablePush} disabled={loading} style={{ height: 36 }}>
+                        <button
+                            className={styles.btn}
+                            onClick={onEnablePush}
+                            disabled={loading}
+                            style={{ height: 36, padding: "0 14px", borderRadius: 10 }}
+                        >
                             {loading ? "Working..." : "Enable notifications"}
                         </button>
                     )}
 
-                    <button onClick={onSendTest} disabled={loading} style={{ height: 36 }}>
+                    <button
+                        className={styles.btn}
+                        onClick={onSendTest}
+                        disabled={loading}
+                        style={{ height: 36, padding: "0 14px", borderRadius: 10 }}
+                    >
                         {loading ? "Working..." : "Send test notification"}
                     </button>
                 </div>
-
-                {msg && <p style={{ color: "#666", marginTop: 12, marginBottom: 0, marginLeft: 6 }}>{msg}</p>}
             </div>
 
+            {isPasswordUser ? (
+                <div className={styles.card} style={{ marginTop: 20, padding: 14, borderRadius: 14, maxWidth: 700 }}>
+                    <h3 style={{ marginTop: 0 }}>Change password</h3>
+
+                    <div style={{ display: "grid", gap: 10, marginTop: 10 }}>
+                        <input
+                            className={styles.input}
+                            type="password"
+                            placeholder="New password"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            disabled={loading}
+                            style={{ height: 32, padding: "4px 10px", borderRadius: 10 }}
+                        />
+
+                        <input
+                            className={styles.input}
+                            type="password"
+                            placeholder="Confirm new password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            disabled={loading}
+                            style={{ height: 32, padding: "4px 10px", borderRadius: 10 }}
+                        />
+
+                        <div style={{ marginTop: 6, display: "flex", justifyContent: "flex-end" }}>
+                            <button
+                                className={`${styles.btn} ${styles.btnPrimary}`}
+                                onClick={onChangePassword}
+                                disabled={loading}
+                                style={{ height: 36, padding: "0 14px", borderRadius: 10 }}
+                            >
+                                {loading ? "Working..." : "Update password"}
+                            </button>
+                        </div>
+
+                        {pwErr && <p className={styles.danger} style={{ margin: 0 }}>{pwErr}</p>}
+                        {pwMsg && <p className={styles.muted} style={{ margin: 0 }}>{pwMsg}</p>}
+                    </div>
+                </div>
+            ) : isGoogleUser ? (
+                <p className={styles.muted} style={{ marginTop: 20, marginLeft: 1 }}>
+                    Password is managed by Google for this account.
+                </p>
+            ) : null}
+
+
             {user?.email && (
-                <p style={{ color: "#666", marginTop: 20, marginLeft: 1 }}>
-                    Signed in as: <strong>{user.email}</strong>
+                <p className={styles.muted} style={{ marginTop: 20, marginLeft: 1 }}>
+                    Signed in as: <strong style={{ color: "rgba(233,233,234,0.85)" }}>{user.email}</strong>
                 </p>
             )}
 
+            {msg && (
+                <p className={styles.muted} style={{ color: "#ff6b6b", marginTop: 20 }}>
+                    {msg}
+                </p>
+            )}
         </div>
     );
 }

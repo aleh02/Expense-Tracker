@@ -1,7 +1,8 @@
 //Login Page
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { signInEmail, signInGoogle, signUpEmail } from "../auth.service"
+import { signInEmail, signInGoogle, signUpEmail, sendResetEmail } from "../auth.service"
+import styles from "./LoginPage.module.css";
 
 export function LoginPage() {
     const nav = useNavigate();
@@ -10,6 +11,7 @@ export function LoginPage() {
     const [mode, setMode] = useState<'login' | 'signup'>('login');
     const [error, setError] = useState<string | null>(null);
     const [busy, setBusy] = useState(false);
+    const [msg, setMsg] = useState<string | null>(null);
 
     async function handleEmail() {
         setError(null);
@@ -38,46 +40,101 @@ export function LoginPage() {
         }
     }
 
+    async function handleForgotPassword() {
+        setError(null);
+
+        const trimmed = email.trim();
+        if (!trimmed) {
+            setError("Enter your email first.");
+            return;
+        }
+
+        try {
+            setBusy(true);
+            await sendResetEmail(trimmed);
+            setError(null);
+            setMsg("If an account exists for this email, a reset link has been sent. Check your inbox.");
+        } catch (e: any) {
+            setError("Failed to send reset email.");
+        } finally {
+            setBusy(false);
+        }
+    }
+
+    function handleSubmit(e: React.FormEvent) {
+        e.preventDefault();
+        handleEmail();
+    }
+
     return (
-        <div style={{ padding: 24, fontFamily: 'system-ui, sans-serif', maxWidth: 420 }}>
-            <h2>{mode === 'login' ? 'Login' : 'Sign up'}</h2>
+        <div className={styles.page}>
+            <div className={styles.stack}>
+                <h1 className={styles.appTitle}>Expense Tracker</h1>
 
-            <div style={{ display: 'grid', gap: 8}}>
-                <input 
-                    placeholder="Email" 
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    autoComplete="email"
-                />
-                <input 
-                    placeholder="Password" 
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-                />
+                <div className={styles.card}>
+                    <div className={styles.cardHeader}>
+                        <h2 className={styles.title}>{mode === "login" ? "Login" : "Sign up"}</h2>
+                        <p className={styles.subtitle}>
+                            {mode === "login" ? "Welcome back" : "Create your account"}
+                        </p>
+                    </div>
+                    <form className={styles.form} onSubmit={handleSubmit}>
+                        <input
+                            className={styles.control}
+                            placeholder="Email"
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            autoComplete="email"
+                        />
 
-                <button onClick={handleEmail} disabled={busy || !email || password.length < 6}>
-                    {busy ? '...' : mode === 'login' ? 'Login' : 'Create account'}
-                </button>
-                
-                <button onClick={handleGoogle} disabled={busy}>
-                    Continue with Google
-                </button>
+                        <input
+                            className={styles.control}
+                            placeholder="Password"
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            autoComplete={mode === "login" ? "current-password" : "new-password"}
+                        />
 
-                <button 
-                    onClick={() => setMode((m) => (m === 'login' ? 'signup' : 'login'))} 
-                    disabled={busy}
-                    style={{ background: 'transparent', border: '1px solid #ddd' }}
-                >
-                    Switch to {mode === 'login' ? 'Sign up' : 'Login'}
-                </button>
+                        <button
+                            className={styles.primaryBtn}
+                            type="submit"
+                            disabled={busy || !email || password.length < 6}
+                        >
+                            {busy ? "..." : mode === "login" ? "Login" : "Create account"}
+                        </button>
 
-                {error && <p style={{ color: 'crimson' }}>{error}</p>}
+                        {mode === 'login' && (
+                            <button
+                                className={styles.ghostBtn} // or your styles.btn if you’re using AppShell styles
+                                type="button"
+                                onClick={handleForgotPassword}
+                                disabled={busy || !email}
+                            >
+                                Forgot password?
+                            </button>
+                        )}
 
-                <p style={{ color: '#666', fontSize: 12 }}>
-                    Note: password must contain at least 6 characters.
-                </p>
+                        {msg && <p className={styles.muted}>{msg}</p>}
+
+                        <button className={styles.secondaryBtn} onClick={handleGoogle} disabled={busy}>
+                            Continue with Google
+                        </button>
+
+                        <button
+                            className={styles.ghostBtn}
+                            onClick={() => setMode((m) => (m === "login" ? "signup" : "login"))}
+                            disabled={busy}
+                        >
+                            Switch to {mode === "login" ? "Sign up" : "Login"}
+                        </button>
+
+                        {error && <p className={styles.error}>{error}</p>}
+
+                        <p className={styles.muted}>Note: password must contain at least 6 characters.</p>
+                    </form>
+                </div>
             </div>
         </div>
     );

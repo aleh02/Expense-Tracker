@@ -1,9 +1,11 @@
+//Service: login/logout functions
 import {
     createUserWithEmailAndPassword,
     GoogleAuthProvider,
     signInWithEmailAndPassword,
     signInWithPopup,
     signOut,
+    sendPasswordResetEmail,
 } from "firebase/auth";
 import { auth } from "../../shared/firebase/auth";
 
@@ -22,6 +24,10 @@ export function signInGoogle(){
 
 export function logout() {
     return signOut(auth);
+}
+
+export function sendResetEmail(email: string) {
+    return sendPasswordResetEmail(auth, email);
 }
 
 
