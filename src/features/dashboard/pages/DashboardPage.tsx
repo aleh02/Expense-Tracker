@@ -237,13 +237,13 @@ export function DashboardPage() {
                 {error && <p style={{ color: "crimson", margin: 0 }}>{error}</p>}
 
                 {!loading && !error && (
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-                        {/* Budget card */}
+                    <div style={{ marginTop: 4, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
                         <div style={{
                             padding: 14,
                             border: "1px solid rgba(255,255,255,0.08)",
                             borderRadius: 14,
                             background: "rgba(255,255,255,0.03)",
+                            width: 330,
                         }}>
                             <div style={{ fontWeight: 700, marginBottom: 10 }}>Monthly Budget</div>
 
@@ -299,12 +299,12 @@ export function DashboardPage() {
                             )}
                         </div>
 
-                        {/* Total card */}
                         <div style={{
                             padding: 14,
                             border: "1px solid rgba(255,255,255,0.08)",
                             borderRadius: 14,
                             background: "rgba(255,255,255,0.03)",
+                            width: 330,
                         }}>
                             <div style={{ fontWeight: 700, marginBottom: 10 }}>Monthly Total</div>
 

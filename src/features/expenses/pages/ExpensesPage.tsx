@@ -246,9 +246,9 @@ export function ExpensesPage() {
 
     if (loading) {
         return (
-            <div>
+            <div className={styles.page}>
                 <h2>Expenses</h2>
-                <p className={styles.muted}>Loading...</p>
+                <p className={styles.muted} style={{ marginTop: -18 }}>Loading...</p>
             </div>
         );
     }

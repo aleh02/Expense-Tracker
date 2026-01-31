@@ -36,7 +36,7 @@ export function SettingsPage() {
         };
     }, []);
 
-    //changes currency if user changes
+    //loads base currency
     useEffect(() => {
         if (!user) return;
         (async () => {
@@ -119,50 +119,89 @@ export function SettingsPage() {
     }
 
     return (
-        <div>
+        <div style={{ marginTop: -18, maxWidth: 1100, padding: "24px 16px" }}>
             <h2>Settings</h2>
 
-            <p style={{ color: '#666', marginTop: 6 }}>
+            <p style={{ color: "#888", marginTop: -4 }}>
                 Manage currency, notification permissions and test push delivery.
             </p>
-            <h3 style={{ marginTop: 16 }}>Currency</h3>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8 }}>
-                <select value={baseCurrency} onChange={(e) => setBaseCurrencyState(e.target.value)} disabled={loading}>
-                    <option value="EUR">EUR</option>
-                    <option value="USD">USD</option>
-                    <option value="GBP">GBP</option>
-                    <option value="CNY">CNY</option>
-                    <option value="JPY">JPY</option>
-                </select>
-                <button onClick={onSaveCurrency} disabled={loading}>
-                    {loading ? 'Working...' : 'Save'}
-                </button>
+
+            <div
+                style={{
+                    marginTop: 14,
+                    padding: 14,
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    borderRadius: 14,
+                    background: "rgba(255,255,255,0.03)",
+                    maxWidth: 700,
+                }}
+            >
+                <h3 style={{ marginTop: 0 }}>Currency</h3>
+
+                <div style={{ display: "flex", gap: 10, alignItems: "center", marginTop: 12 }}>
+                    <select
+                        value={baseCurrency}
+                        onChange={(e) => setBaseCurrencyState(e.target.value)}
+                        disabled={loading}
+                        style={{
+                            flex: 1,
+                            minWidth: 0,
+                            height: 32,
+                            padding: "4px 10px",
+                            borderRadius: 10,
+                            boxSizing: "border-box",
+                        }}
+                    >
+                        <option value="EUR">EUR</option>
+                        <option value="USD">USD</option>
+                        <option value="GBP">GBP</option>
+                        <option value="CNY">CNY</option>
+                        <option value="JPY">JPY</option>
+                    </select>
+
+                    <button onClick={onSaveCurrency} disabled={loading} style={{ height: 36 }}>
+                        {loading ? "Working..." : "Save"}
+                    </button>
+                </div>
             </div>
 
-            <h3 style={{ marginTop: 16 }}>Notifications</h3>
-            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                {pushEnabled ? (
-                    <button onClick={onDisablePush} disabled={loading}>
-                        {loading ? 'Working...' : 'Disable notifications'}
-                    </button>
-                ) : (
-                    <button onClick={onEnablePush} disabled={loading}>
-                        {loading ? 'Working...' : 'Enable notifications'}
-                    </button>
-                )}
+            <div
+                style={{
+                    marginTop: 20,
+                    padding: 14,
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    borderRadius: 14,
+                    background: "rgba(255,255,255,0.03)",
+                    maxWidth: 700,
+                }}
+            >
+                <h3 style={{ marginTop: 0 }}>Notifications</h3>
 
-                <button onClick={onSendTest} disabled={loading}>
-                    {loading ? 'Working...' : 'Send test notification'}
-                </button>
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 10, marginBottom: 4 }}>
+                    {pushEnabled ? (
+                        <button onClick={onDisablePush} disabled={loading} style={{ height: 36 }}>
+                            {loading ? "Working..." : "Disable notifications"}
+                        </button>
+                    ) : (
+                        <button onClick={onEnablePush} disabled={loading} style={{ height: 36 }}>
+                            {loading ? "Working..." : "Enable notifications"}
+                        </button>
+                    )}
+
+                    <button onClick={onSendTest} disabled={loading} style={{ height: 36 }}>
+                        {loading ? "Working..." : "Send test notification"}
+                    </button>
+                </div>
+
+                {msg && <p style={{ color: "#666", marginTop: 12, marginBottom: 0, marginLeft: 6 }}>{msg}</p>}
             </div>
-
-            {msg && <p style={{ color: '#666', marginTop: 10 }}>{msg}</p>}
 
             {user?.email && (
-                <p style={{ color: '#666', marginTop: 10 }}>
+                <p style={{ color: "#666", marginTop: 20, marginLeft: 1 }}>
                     Signed in as: <strong>{user.email}</strong>
                 </p>
             )}
+
         </div>
     );
 }

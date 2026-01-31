@@ -7,7 +7,6 @@
   gap: 18px;
 }
 
-
 .muted {
     color: #666;
 }
@@ -71,11 +70,10 @@
 .subtitle {
   color: #888;
   margin-top: -24px;
-  max-width: 720px;
 }
 
 .card {
-  margin-top: -8px;
+  margin-top: -16px;
   padding: 14px;
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: 14px;
@@ -97,10 +95,11 @@
 
 .control {
   width: 100%;
-  min-width: 0; /* important */
+  min-width: 0; 
   box-sizing: border-box;
   height: 32px;
   padding: 4px 10px;
+  border-radius: 10px;
 }
 
 .actionsRow {
