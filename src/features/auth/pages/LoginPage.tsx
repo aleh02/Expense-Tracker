@@ -118,13 +118,18 @@ export function LoginPage() {
 
                         {msg && <p className={styles.muted}>{msg}</p>}
 
-                        <button className={styles.secondaryBtn} onClick={handleGoogle} disabled={busy}>
+                        <button className={styles.secondaryBtn} type="button" onClick={handleGoogle} disabled={busy}>
                             Continue with Google
                         </button>
 
                         <button
                             className={styles.ghostBtn}
-                            onClick={() => setMode((m) => (m === "login" ? "signup" : "login"))}
+                            type="button"
+                            onClick={() => {
+                                setError(null);
+                                setMsg(null);
+                                setMode((m) => (m === "login" ? "signup" : "login"));
+                            }}
                             disabled={busy}
                         >
                             Switch to {mode === "login" ? "Sign up" : "Login"}
