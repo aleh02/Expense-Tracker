@@ -304,7 +304,7 @@ export function ExpensesPage() {
 
     return (
         <div className={styles.page}>
-            <h2>Expenses</h2>
+            <h2 style={{ margin: 0, fontWeight: 800 }}>Expenses</h2>
             <OfflineBanner />
 
             <p className={styles.subtitle}>

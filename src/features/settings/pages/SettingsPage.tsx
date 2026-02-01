@@ -165,9 +165,9 @@ export function SettingsPage() {
 
     return (
         <div style={{ marginTop: -18, maxWidth: 1100, padding: "24px 16px" }}>
-            <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800 }}>Settings</h2>
+            <h2 style={{ margin: 0, fontWeight: 800 }}>Settings</h2>
 
-            <p className={styles.muted} style={{ marginTop: -4 }}>
+            <p className={styles.muted}>
                 Manage currency, notification permissions and test push delivery.
             </p>
 

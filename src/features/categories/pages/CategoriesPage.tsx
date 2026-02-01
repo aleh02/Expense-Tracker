@@ -119,7 +119,7 @@ export function CategoriesPage() {
     }
 
     return (
-        <div style={{ margin: '0 auto', maxWidth: 1100, padding: "24px 16px" }}>
+        <div style={{ marginTop: -18, maxWidth: 1100, padding: "24px 16px" }}>
             <h2 style={{ margin: 0, fontWeight: 800 }}>Categories</h2>
 
             <OfflineBanner />
