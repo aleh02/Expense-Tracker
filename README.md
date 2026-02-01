@@ -224,3 +224,13 @@ The app version is read from package.json and displayed in Settings.
 
 This project is licensed under the **MIT License**.  
 See the [LICENSE](./LICENSE) file for details.
+
+---
+
+## 👤 Author
+
+Alessandro Han
+
+Computer Science, University of Pisa
+
+LinkedIn: https://www.linkedin.com/in/alessandro-han-b87391223/
