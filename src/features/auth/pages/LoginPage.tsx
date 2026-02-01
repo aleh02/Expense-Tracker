@@ -53,7 +53,7 @@ export function LoginPage() {
             setBusy(true);
             await sendResetEmail(trimmed);
             setError(null);
-            setMsg("If an account exists for this email, a reset link has been sent. Check your inbox.");
+            setMsg("If an account exists for this email, a reset link has been sent.");
         } catch (e: any) {
             setError("Failed to send reset email.");
         } finally {

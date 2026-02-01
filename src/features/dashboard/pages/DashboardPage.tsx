@@ -106,7 +106,7 @@ export function DashboardPage() {
         return () => {
             cancelled = true;
         };
-    }, [user?.uid, month]);
+    }, [user?.uid, month, baseCurrency]);
 
     const categoryMap = useMemo(() => {
         const m = new Map<string, string>();
@@ -125,7 +125,13 @@ export function DashboardPage() {
                 const byCat = new Map<string, number>();    //by category
 
                 for (const e of expenses) {
-                    const baseValue = await convertAmount(e.occurredAt, e.amount, e.currency, baseCurrency);
+                    let baseValue = 0;
+                    try{
+                        baseValue = await convertAmount(e.occurredAt, e.amount, e.currency, baseCurrency);
+                    } catch(err: any) {
+                        console.warn("convertAmount failed: ", err);
+                        continue;
+                    }
 
                     total += baseValue;
                     byCat.set(e.categoryId, (byCat.get(e.categoryId) ?? 0) + baseValue);

@@ -4,6 +4,9 @@ import { enablePushNotifications, sendBudgetAlert } from "../../notifications/pu
 import { getProfile, setBaseCurrency } from "../profile.service";
 import { updatePassword } from "firebase/auth";
 import styles from "../../../app/layouts/AppShell.module.css";
+import pkg from "../../../../package.json";
+
+const APP_VERSION = pkg.version;
 
 async function getCurrentSubscription(): Promise<PushSubscription | null> {
     if (!('serviceWorker' in navigator)) return null;
@@ -325,6 +328,10 @@ export function SettingsPage() {
                     {msg}
                 </p>
             )}
+
+            <p className={styles.muted} style={{ marginTop: 20 }}>
+                Version: <strong style={{ color: "rgba(233,233,234,0.85)" }}>v{APP_VERSION}</strong>
+            </p>
         </div>
     );
 }
