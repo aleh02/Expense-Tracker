@@ -180,7 +180,7 @@ export function SettingsPage() {
                     maxWidth: 700,
                 }}
             >
-                <h3 style={{ marginTop: 0 }}>Currency</h3>
+                <h3>Currency</h3>
 
                 <form onSubmit={handleSubmit} style={{ display: "flex", gap: 10, alignItems: "center", marginTop: 12 }}>
                     <select

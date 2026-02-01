@@ -173,7 +173,7 @@ export function CategoriesPage() {
                         )}
                     </div>
 
-                    <h3 style={{ fontSize: 21, marginTop: 32 }}>Your Categories</h3>
+                    <h3 style={{ fontWeight: 800, marginTop: 32 }}>Your Categories</h3>
 
                     <ul
                         style={{
