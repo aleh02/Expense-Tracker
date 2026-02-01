@@ -132,7 +132,6 @@ export function DashboardPage() {
                         console.warn("convertAmount failed: ", err);
                         continue;
                     }
-
                     total += baseValue;
                     byCat.set(e.categoryId, (byCat.get(e.categoryId) ?? 0) + baseValue);
                 }

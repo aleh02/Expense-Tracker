@@ -1,3 +1,4 @@
+//Auth Context (global user state)
 import { onAuthStateChanged, type User } from "firebase/auth";
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { auth } from "../../shared/firebase/auth";
