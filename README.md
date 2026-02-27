@@ -212,9 +212,9 @@ VAPID_PRIVATE_KEY=...
 
 ## Mobile Support
 
-- Responsive layout
-- Optimized input sizes
-- Touch-friendly buttons
+- Basic responsive layout
+- Input controls are usable on small screens
+- Core pages are primarily optimized for desktop
 - Works as a PWA when installed
 
 --- 
