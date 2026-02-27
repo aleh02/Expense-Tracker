@@ -1,21 +1,21 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 
 //tracks browser online/offline state
 export function useOnline(): boolean {
-    const [online, setOnline] = useState(navigator.onLine);
+  const [online, setOnline] = useState(navigator.onLine);
 
-    useEffect(() => {
-        const on = () => setOnline(true);
-        const off = () => setOnline(false);
+  useEffect(() => {
+    const on = () => setOnline(true);
+    const off = () => setOnline(false);
 
-        window.addEventListener('online', on);
-        window.addEventListener('offline', off);
+    window.addEventListener('online', on);
+    window.addEventListener('offline', off);
 
-        return () => {
-            window.removeEventListener('online', on);
-            window.removeEventListener('offline', off);
-        }
-    }, []);
+    return () => {
+      window.removeEventListener('online', on);
+      window.removeEventListener('offline', off);
+    };
+  }, []);
 
-    return online;
+  return online;
 }
