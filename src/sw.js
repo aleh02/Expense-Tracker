@@ -14,12 +14,13 @@ registerRoute(
     new CacheFirst({ cacheName: 'assets' }),    //cache first
 );
 
-//page navigations: network first
+//for page navigations, try network first so users get fresh data
+//if network is slow or unavailable, fall back to cached pages after 3s
 registerRoute(
     ({ request }) => request.mode === 'navigate',
     new NetworkFirst({
         cacheName: 'pages',
-        networkTimeoutSeconds: 3,   //cache if network timeout
+        networkTimeoutSeconds: 3,
     }),
 );
 

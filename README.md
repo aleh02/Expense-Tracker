@@ -5,38 +5,38 @@ Supports monthly budgets, multi-currency expenses with historical exchange rates
 
 ---
 
-## ✨ Features
+## Features
 
-- 🔐 Authentication
+- Authentication
   - Email & password
   - Google Sign-In
   - Password reset email
   - Change password (email users only)
 
-- 💸 Expenses
+- Expenses
   - Add, edit, delete expenses
   - Category-based organization
   - Multi-currency support
   - Automatic conversion using the **exchange rate of the expense day**
 
-- 📊 Dashboard
+- Dashboard
   - Monthly totals
   - Category breakdown with charts
   - Monthly budget with over/under tracking
 
-- ⚙️ Settings
+- Settings
   - Base currency selection
   - Push notification management
   - Account info & password update
 
-- 📱 UX
+- UX
   - Keyboard shortcuts (Enter = save, Esc = cancel)
   - Mobile-friendly layout
   - Offline-aware UI
 
 ---
 
-## 🧱 Tech Stack
+## Tech Stack
 
 - **Frontend**
   - React + TypeScript
@@ -52,28 +52,28 @@ Supports monthly budgets, multi-currency expenses with historical exchange rates
 
 ---
 
-## 📦 Requirements
+## Requirements
 
-- Node.js **18+**
+- Node.js **20.19+** (or **22.12+**)
 - Firebase project with:
   - Authentication enabled
   - Cloud Firestore enabled
 
 ---
 
-## 🚀 Local Setup
+## Local Setup
 
-### 1️⃣ Install dependencies
+### 1. Install dependencies
 ```bash
 npm install
 ```
 
-### 2️⃣ Environment variables
+### 2. Environment variables
 
-Create a .env file from the template:
+Create a `.env.local` file in the project root:
 
 ```bash
-cp .env.example .env
+touch .env.local
 ```
 
 Fill in all required values.
@@ -85,13 +85,9 @@ VITE_FIREBASE_PROJECT_ID=your_project_id
 VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
 VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
 VITE_FIREBASE_APP_ID=1:123456789:web:abcdef
-VITE_FIREBASE_MEASUREMENT_ID=G-XXXXXXX
-
-# Optional (push server)
-VITE_PUSH_SERVER_BASE_URL=https://your-push-server.example.com
 ```
 
-### 🧪 Run Locally
+### Run locally
 
 ```bash
 npm run dev
@@ -103,7 +99,7 @@ Open:
 http://localhost:5173
 ```
 
-### 🏗️ Build & Preview
+### Build and preview
 
 ```bash
 npm run build
@@ -112,9 +108,9 @@ npm run preview
 
 ---
 
-## ☁️ Deploy to Firebase Hosting
+## Deploy to Firebase Hosting
 
-### 1️⃣ Login & initialize
+### 1. Login and initialize
 
 ```bash
 firebase login
@@ -124,7 +120,7 @@ firebase init hosting
 - Public directory: dist
 - Configure as SPA: Yes
 
-### 2️⃣ Build & deploy
+### 2. Build and deploy
 
 ```bash
 npm run build
@@ -139,7 +135,7 @@ https://<project-id>.web.app
 
 ---
 
-## 🔐 Firestore Security Rules (Required)
+## Firestore Security Rules (Required)
 
 Each document is owned by a user (userId field).
 
@@ -184,9 +180,18 @@ service cloud.firestore {
 
 ---
 
-## 🔔 Push Notifications (Optional)
+## Push Notifications (Optional)
 
 The frontend can connect to an external Express + Web Push server.
+
+Note: the push server base URL is currently hardcoded in
+`src/features/notifications/push.service.ts` as:
+
+```ts
+const PUSH_SERVER_URL = 'http://localhost:8080';
+```
+
+If you deploy the push server remotely, update that value accordingly.
 
 If used:
 
@@ -205,7 +210,7 @@ VAPID_PRIVATE_KEY=...
 
 ---
 
-## 📱 Mobile Support
+## Mobile Support
 
 - Responsive layout
 - Optimized input sizes
@@ -214,20 +219,20 @@ VAPID_PRIVATE_KEY=...
 
 --- 
 
-## 🧾 Versioning
+## Versioning
 
 The app version is read from package.json and displayed in Settings.
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the **MIT License**.  
 See the [LICENSE](./LICENSE) file for details.
 
 ---
 
-## 👤 Author
+## Author
 
 Alessandro Han
 

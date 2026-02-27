@@ -9,6 +9,7 @@ import pkg from "../../../../package.json";
 const APP_VERSION = pkg.version;
 
 async function getCurrentSubscription(): Promise<PushSubscription | null> {
+    //read the subscription from the current browser service worker registration
     if (!('serviceWorker' in navigator)) return null;
     const reg = await navigator.serviceWorker.ready;
     return reg.pushManager.getSubscription();

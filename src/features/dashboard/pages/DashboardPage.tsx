@@ -58,7 +58,8 @@ export function DashboardPage() {
         })();
     }, [user?.uid]);
 
-
+    //reload dashboard data when month or base currency changes
+    //baseCurrency is included so the "no budget yet" branch uses the current currency
     useEffect(() => {
         if (!user) return;
 
@@ -114,7 +115,8 @@ export function DashboardPage() {
         return m;
     }, [categories]);
 
-    //calculates total by month and by category
+    //build month totals in current base currency
+    //each expense is converted using the historical rate of its own date
     useEffect(() => {
         let cancelled = false;
         (async () => {
@@ -129,6 +131,8 @@ export function DashboardPage() {
                     try{
                         baseValue = await convertAmount(e.occurredAt, e.amount, e.currency, baseCurrency);
                     } catch(err: any) {
+                        //keep rendering the rest, one failed conversion should not block the whole dashboard
+                        //totals may be slightly lower until rates are available again
                         console.warn("convertAmount failed: ", err);
                         continue;
                     }
@@ -149,6 +153,8 @@ export function DashboardPage() {
         };
     }, [expenses, baseCurrency]);
 
+    //derived view model for chart and list rendering
+    //keep sorting here so rendering code stays simple
     const totalsByCategory = useMemo((): CategoryTotal[] => {
         const result: CategoryTotal[] = [];
 
@@ -199,7 +205,7 @@ export function DashboardPage() {
         }
     }
 
-    //display budget comparison
+    //keep budget and expenses in the same display currency before comparing
     useEffect(() => {
         let cancelled = false;
 
@@ -212,7 +218,8 @@ export function DashboardPage() {
             try {
                 setBudgetBaseLoading(true);
 
-                const date = `${month}-01`; // budget reference date
+                //use first day of the selected month as a stable reference date for conversion
+                const date = `${month}-01`;
 
                 const converted = await convertAmount(date, savedBudget, savedBudgetCurrency, baseCurrency);
                 if (!cancelled) setBudgetBase(converted);

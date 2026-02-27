@@ -12,7 +12,7 @@ import { normalizeCurrency } from '../../../shared/utils/currency';
 import { convertAmount } from '../../../shared/services/fx.service';
 import styles from "./ExpensesPage.module.css";
 
-//Today's date as YYYY-MM-DD (local)
+//today's date as yyyy-mm-dd in local time
 function todayYmd(): string {
     const d = new Date();
     const yyyy = d.getFullYear();
@@ -34,7 +34,7 @@ export function ExpensesPage() {
     const [convertedById, setConvertedById] = useState<Record<string, number>>({});
 
     //form state
-    const [amount, setAmount] = useState(''); // keep as string for input
+    const [amount, setAmount] = useState(''); //keep as string for input
     const [currency, setCurrency] = useState('EUR')
     const [categoryId, setCategoryId] = useState('');
     const [occurredAt, setOccurredAt] = useState(todayYmd());
@@ -55,7 +55,8 @@ export function ExpensesPage() {
         return m;
     }, [categories]);
 
-    //load categories and base currency
+    //initial bootstrap for form defaults
+    //load user categories and profile currency, then seed form currency from profile
     useEffect(() => {
         if (!user) return;
 
@@ -117,6 +118,7 @@ export function ExpensesPage() {
 
     async function reloadExpenses() {
         if (!user) return;
+        //single refresh path used after create, update, and delete
         const exps = await listExpenses(user.uid);
         setExpenses(exps);
     }
@@ -151,8 +153,9 @@ export function ExpensesPage() {
 
             await reloadExpenses();
 
-            //budget check + push
-            const month = occurredAt.slice(0, 7); //YYYY-MM from expense date
+            //after creating an expense, re-check month total and trigger budget alert if needed
+            //this runs on the client, so quick inserts from multiple tabs or devices can still race
+            const month = occurredAt.slice(0, 7); //yyyy-mm from expense date
             const budget = await getBudgetForMonth(user.uid, month);
 
             if (budget) {
@@ -267,7 +270,8 @@ export function ExpensesPage() {
     }
 
 
-    //converts expenses in different currencies
+    //precompute converted values only for rows not already in base currency
+    //if FX lookup fails, store NaN so the UI can show "conversion unavailable"
     useEffect(() => {
         let cancelled = false;
         (async () => {
@@ -280,7 +284,7 @@ export function ExpensesPage() {
 
                 try {
                     next[e.id] = await convertAmount(e.occurredAt, e.amount, from, base);
-                } catch {   //if fx fails/offline
+                } catch {
                     next[e.id] = Number.NaN;
                 }
             }

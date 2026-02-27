@@ -9,8 +9,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-//in-memory store (or later: JSON file for persistence)
-const subscriptionsByUser = new Map();  //userId : PushSubscription
+//demo-level storage, subscriptions live in memory only
+//restarting the server clears them, and this does not scale across instances
+const subscriptionsByUser = new Map();  //userId -> PushSubscription
 
 webpush.setVapidDetails(
     process.env.VAPID_SUBJECT,

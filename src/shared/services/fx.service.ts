@@ -9,6 +9,8 @@ type FxResponse = {
     rates: Record<string, number>;
 };
 
+//simple in-memory cache for FX rates during the current app session
+//key format: "YYYY-MM-DD|FROM|TO", no TTL for now
 const rateCache = new Map<string, number>();
 
 function cacheKey(date: string, from: string, to: string) {

@@ -21,7 +21,7 @@ export type ExpenseUpdateInput = {
     amount: number;
     currency: string;
     categoryId: string;
-    occurredAt: string; // YYYY-MM-DD
+    occurredAt: string; //yyyy-mm-dd
     note?: string;
 };
 
@@ -77,7 +77,7 @@ export async function updateExpense(expenseId: string, input: ExpenseUpdateInput
 }
 
 export async function listExpensesInMonth(userId: string, month: string): Promise<Expense[]> {
-    //filter by occuredAt string range [start, endExclusive)
+    //filter by occurredAt range [start, endExclusive] using ISO date strings
     const { start, endExclusive } = monthRange(month);
 
     const q = query(
@@ -96,4 +96,3 @@ export async function listExpensesInMonth(userId: string, month: string): Promis
         return { id: d.id, ...data, currency: normalizeCurrency(data.currency), };
     });
 }
-
