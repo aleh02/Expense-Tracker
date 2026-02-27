@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { Category, Expense } from '../../../shared/types/models';
 import { currentMonth } from '../../../shared/utils/date';
-import { useAuth } from '../../auth/auth.context';
+import { useAuth } from '../../auth/useAuth';
 import { listCategories } from '../../categories/categories.service';
 import { listExpensesInMonth } from '../../expenses/expenses.service';
 import { OfflineBanner } from '../../../shared/components/OfflineBanner';
@@ -93,10 +93,11 @@ export function DashboardPage() {
                     setBudgetInput('');
                     setEditingBudget(false);
                 }
-            } catch (e: any) {
+            } catch (e: unknown) {
                 console.error("Dashboard load failed:", e);
-                console.log("Firestore error code:", e?.code);
-                console.log("Firestore error message:", e?.message);
+                if (e && typeof e === "object" && "message" in e) {
+                    console.log("Firestore error message:", (e as { message?: unknown }).message);
+                }
                 if (!cancelled) setError('Failed to load dashboard data.');
             }
             finally {
@@ -130,7 +131,7 @@ export function DashboardPage() {
                     let baseValue = 0;
                     try{
                         baseValue = await convertAmount(e.occurredAt, e.amount, e.currency, baseCurrency);
-                    } catch(err: any) {
+                    } catch(err: unknown) {
                         //keep rendering the rest, one failed conversion should not block the whole dashboard
                         //totals may be slightly lower until rates are available again
                         console.warn("convertAmount failed: ", err);

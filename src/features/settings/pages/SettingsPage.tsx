@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { useAuth } from "../../auth/auth.context";
+import { useAuth } from "../../auth/useAuth";
 import { enablePushNotifications, sendBudgetAlert } from "../../notifications/push.service";
 import { getProfile, setBaseCurrency } from "../profile.service";
 import { updatePassword } from "firebase/auth";
+import { FirebaseError } from "firebase/app";
 import styles from "../../../app/layouts/AppShell.module.css";
 import pkg from "../../../../package.json";
 
@@ -148,8 +149,8 @@ export function SettingsPage() {
             setPwMsg("Password updated.");
             setNewPassword("");
             setConfirmPassword("");
-        } catch (e: any) {
-            if (e?.code === "auth/requires-recent-login") {
+        } catch (e: unknown) {
+            if (e instanceof FirebaseError && e.code === "auth/requires-recent-login") {
                 setPwErr("Please log in again, then retry changing your password.");
             } else {
                 setPwErr("Failed to update password.");

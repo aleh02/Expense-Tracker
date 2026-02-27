@@ -1,6 +1,6 @@
 //Authentication Guard
 import { Navigate } from "react-router-dom";
-import { useAuth } from "../auth.context";
+import { useAuth } from "../useAuth";
 import type React from "react";
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {

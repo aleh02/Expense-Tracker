@@ -13,6 +13,14 @@ export function LoginPage() {
     const [busy, setBusy] = useState(false);
     const [msg, setMsg] = useState<string | null>(null);
 
+    function getErrorMessage(e: unknown, fallback: string) {
+        if (e && typeof e === "object" && "message" in e) {
+            const message = (e as { message?: unknown }).message;
+            if (typeof message === "string" && message.length > 0) return message;
+        }
+        return fallback;
+    }
+
     async function handleEmail() {
         setError(null);
         setBusy(true);
@@ -20,8 +28,8 @@ export function LoginPage() {
             if (mode === 'login') await signInEmail(email, password);
             else await signUpEmail(email, password);
             nav('/app/dashboard', { replace: true });
-        } catch (e: any) {
-            setError(e?.message ?? 'Auth error');
+        } catch (e: unknown) {
+            setError(getErrorMessage(e, 'Auth error'));
         } finally {
             setBusy(false);
         }
@@ -33,8 +41,8 @@ export function LoginPage() {
         try {
             await signInGoogle();
             nav('/app/dashboard', { replace: true });
-        } catch (e: any) {
-            setError(e?.message ?? 'Google Auth error');
+        } catch (e: unknown) {
+            setError(getErrorMessage(e, 'Google Auth error'));
         } finally {
             setBusy(false);
         }
@@ -54,7 +62,7 @@ export function LoginPage() {
             await sendResetEmail(trimmed);
             setError(null);
             setMsg("If an account exists for this email, a reset link has been sent.");
-        } catch (e: any) {
+        } catch {
             setError("Failed to send reset email.");
         } finally {
             setBusy(false);

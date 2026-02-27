@@ -1,15 +1,8 @@
 //Auth Context (global user state)
 import { onAuthStateChanged, type User } from "firebase/auth";
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { auth } from "../../shared/firebase/auth";
-
-type AuthState = {
-    user: User | null;
-    loading: boolean;
-};
-
-//Creates the context object as undefined
-const AuthContext = createContext<AuthState | undefined>(undefined);
+import { AuthContext } from "./auth-context";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     // State to hold the current user and the initial loading flag
@@ -30,12 +23,4 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     //Provides the auth state to all child components
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-//Custom hook to access the auth context safely
-export function useAuth() {
-    const ctx = useContext(AuthContext);
-    //Ensures the hook is called inside the Provider
-    if(!ctx) throw new Error('useAuth must be inside AuthProvider');
-    return ctx;
 }

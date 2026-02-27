@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import type { Category } from "../../../shared/types/models";
-import { useAuth } from "../../auth/auth.context";
+import { useAuth } from "../../auth/useAuth";
 import { createCategory, listCategories, removeCategory, updateCategory } from "../categories.service";
 import { OfflineBanner } from "../../../shared/components/OfflineBanner";
 import styles from "../../../app/layouts/AppShell.module.css";

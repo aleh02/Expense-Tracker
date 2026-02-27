@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import type { Category, Expense } from '../../../shared/types/models';
-import { useAuth } from '../../auth/auth.context';
+import { useAuth } from '../../auth/useAuth';
 import { listCategories } from '../../categories/categories.service';
 import { createExpense, listExpenses, removeExpense, updateExpense } from '../expenses.service';
 import { OfflineBanner } from '../../../shared/components/OfflineBanner';
@@ -161,7 +161,7 @@ export function ExpensesPage() {
             if (budget) {
                 const monthExpenses = await listExpensesInMonth(user.uid, month);
 
-                const base = normalizeCurrency(currency);
+                const base = normalizeCurrency(budget.currency);
                 let totalBase = 0;
 
                 for (const e of monthExpenses) {
