@@ -1,12 +1,38 @@
 //router
+import { Suspense, lazy, type ReactNode } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { AppLayout } from './layouts/AppLayout';
 import { AuthGuard } from '../features/auth/components/AuthGuard';
-import { LoginPage } from '../features/auth/pages/LoginPage';
-import { DashboardPage } from '../features/dashboard/pages/DashboardPage';
-import { ExpensesPage } from '../features/expenses/pages/ExpensesPage';
-import { CategoriesPage } from '../features/categories/pages/CategoriesPage';
-import { SettingsPage } from '../features/settings/pages/SettingsPage';
+
+const LoginPage = lazy(() =>
+  import('../features/auth/pages/LoginPage').then((m) => ({
+    default: m.LoginPage,
+  })),
+);
+const DashboardPage = lazy(() =>
+  import('../features/dashboard/pages/DashboardPage').then((m) => ({
+    default: m.DashboardPage,
+  })),
+);
+const ExpensesPage = lazy(() =>
+  import('../features/expenses/pages/ExpensesPage').then((m) => ({
+    default: m.ExpensesPage,
+  })),
+);
+const CategoriesPage = lazy(() =>
+  import('../features/categories/pages/CategoriesPage').then((m) => ({
+    default: m.CategoriesPage,
+  })),
+);
+const SettingsPage = lazy(() =>
+  import('../features/settings/pages/SettingsPage').then((m) => ({
+    default: m.SettingsPage,
+  })),
+);
+
+function withSuspense(page: ReactNode) {
+  return <Suspense fallback={<p>Loading...</p>}>{page}</Suspense>;
+}
 
 export const router = createBrowserRouter([
   {
@@ -15,7 +41,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/login',
-    element: <LoginPage />,
+    element: withSuspense(<LoginPage />),
   },
   {
     path: '/app',
@@ -25,10 +51,10 @@ export const router = createBrowserRouter([
       </AuthGuard>
     ),
     children: [
-      { path: 'dashboard', element: <DashboardPage /> },
-      { path: 'expenses', element: <ExpensesPage /> },
-      { path: 'categories', element: <CategoriesPage /> },
-      { path: 'settings', element: <SettingsPage /> },
+      { path: 'dashboard', element: withSuspense(<DashboardPage />) },
+      { path: 'expenses', element: withSuspense(<ExpensesPage />) },
+      { path: 'categories', element: withSuspense(<CategoriesPage />) },
+      { path: 'settings', element: withSuspense(<SettingsPage />) },
       { path: '*', element: <Navigate to="/app/dashboard" replace /> },
     ],
   },
