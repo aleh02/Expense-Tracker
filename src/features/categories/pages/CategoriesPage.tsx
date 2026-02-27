@@ -41,7 +41,7 @@ export function CategoriesPage() {
     return () => {
       cancelled = true;
     };
-  }, [user?.uid]);
+  }, [user]);
 
   async function reload() {
     if (!user) return;

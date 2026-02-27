@@ -57,7 +57,7 @@ export function DashboardPage() {
         setBaseCurrency('EUR');
       }
     })();
-  }, [user?.uid]);
+  }, [user]);
 
   //reload dashboard data when month or base currency changes
   //baseCurrency is included so the "no budget yet" branch uses the current currency
@@ -111,7 +111,7 @@ export function DashboardPage() {
     return () => {
       cancelled = true;
     };
-  }, [user?.uid, month, baseCurrency]);
+  }, [user, month, baseCurrency]);
 
   const categoryMap = useMemo(() => {
     const m = new Map<string, string>();

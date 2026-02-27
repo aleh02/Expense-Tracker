@@ -91,7 +91,7 @@ export function ExpensesPage() {
     return () => {
       cancelled = true;
     };
-  }, [user?.uid]);
+  }, [user]);
 
   //set default category when categories arrive
   useEffect(() => {
@@ -121,7 +121,7 @@ export function ExpensesPage() {
     return () => {
       cancelled = true;
     };
-  }, [user?.uid]);
+  }, [user]);
 
   async function reloadExpenses() {
     if (!user) return;

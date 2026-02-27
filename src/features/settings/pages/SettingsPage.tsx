@@ -63,7 +63,7 @@ export function SettingsPage() {
       const p = await getProfile(user.uid);
       setBaseCurrencyState(p.baseCurrency);
     })();
-  }, [user?.uid]);
+  }, [user]);
 
   async function onEnablePush() {
     if (!user) return;
