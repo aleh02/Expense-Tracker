@@ -12,6 +12,12 @@ import { getProfile } from '../../settings/profile.service';
 import { normalizeCurrency } from '../../../shared/utils/currency';
 import styles from '../../../app/layouts/AppShell.module.css';
 
+const DASHBOARD_MONTH_STORAGE_KEY = 'dashboard:selectedMonth';
+
+function isValidMonth(value: string | null): value is string {
+  return typeof value === 'string' && /^\d{4}-\d{2}$/.test(value);
+}
+
 type CategoryTotal = {
   categoryId: string;
   name: string;
@@ -20,7 +26,13 @@ type CategoryTotal = {
 
 export function DashboardPage() {
   const { user } = useAuth();
-  const [month, setMonth] = useState(currentMonth());
+  const [month, setMonth] = useState(() => {
+    const fallback = currentMonth();
+    if (typeof window === 'undefined') return fallback;
+
+    const stored = window.localStorage.getItem(DASHBOARD_MONTH_STORAGE_KEY);
+    return isValidMonth(stored) ? stored : fallback;
+  });
   const [categories, setCategories] = useState<Category[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
 
@@ -40,9 +52,13 @@ export function DashboardPage() {
 
   const [totalsLoading, setTotalsLoading] = useState(false);
   const [totalMonthBase, setTotalMonthBase] = useState(0);
-  const [totalsByCategoryBase, setTotalsByCategoryBase] = useState<
-    Map<string, number>
-  >(new Map());
+  const [totalsByCategoryBase, setTotalsByCategoryBase] =
+    useState<Map<string, number>>(new Map());
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !isValidMonth(month)) return;
+    window.localStorage.setItem(DASHBOARD_MONTH_STORAGE_KEY, month);
+  }, [month]);
 
   //loads base currency
   useEffect(() => {
@@ -273,7 +289,10 @@ export function DashboardPage() {
             className={styles.input}
             type="month"
             value={month}
-            onChange={(e) => setMonth(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (isValidMonth(value)) setMonth(value);
+            }}
             disabled={loading}
             style={{ height: 32, padding: '0px 10px', borderRadius: 10 }}
           />
@@ -333,17 +352,17 @@ export function DashboardPage() {
 
                         {normalizeCurrency(savedBudgetCurrency) !==
                           normalizeCurrency(baseCurrency) && (
-                          <div
-                            className={styles.muted}
-                            style={{ marginTop: 4 }}
-                          >
-                            ≈{' '}
-                            {budgetBaseLoading
-                              ? '...'
-                              : `${(budgetBase ?? 0).toFixed(2)} ${baseCurrency}`}{' '}
-                            (converted)
-                          </div>
-                        )}
+                            <div
+                              className={styles.muted}
+                              style={{ marginTop: 4 }}
+                            >
+                              ≈{' '}
+                              {budgetBaseLoading
+                                ? '...'
+                                : `${(budgetBase ?? 0).toFixed(2)} ${baseCurrency}`}{' '}
+                              (converted)
+                            </div>
+                          )}
                       </>
                     )}
                   </div>
