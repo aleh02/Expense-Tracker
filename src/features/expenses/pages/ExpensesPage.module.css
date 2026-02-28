@@ -37,11 +37,39 @@
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
 }
 
+.filterCard {
+  margin-top: -4px;
+  padding: 10px 12px;
+  width: 100%;
+  border-radius: 12px;
+  background: #151821;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
 .formGrid {
   display: grid;
   grid-template-columns: 160px minmax(0, 1fr);
   gap: 10px 12px;
   align-items: center;
+}
+
+.filterGrid {
+  display: grid;
+  grid-template-columns: 1.2fr 1.2fr 0.8fr 0.8fr auto;
+  gap: 8px;
+  align-items: end;
+}
+
+.filterLabel {
+  color: rgba(233, 233, 234, 0.75);
+  font-size: 12px;
+  margin-bottom: 4px;
+  margin-left: 6px;
+}
+
+.filterActions {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .label {
@@ -125,7 +153,9 @@
 }
 
 .list {
-  margin-top: 8px;
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
   display: grid;
   gap: 10px;
 }
@@ -188,6 +218,15 @@
 }
 
 @media (max-width: 720px) {
+  .filterGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .filterActions {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+
   .row {
     grid-template-columns: 1fr;
     gap: 8px;

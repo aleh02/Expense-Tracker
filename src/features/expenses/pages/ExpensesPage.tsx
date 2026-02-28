@@ -48,6 +48,12 @@ export function ExpensesPage() {
   const [note, setNote] = useState('');
   const [loading, setLoading] = useState(true); //page bootstrap loading
 
+  //filters
+  const [filterMonth, setFilterMonth] = useState('');
+  const [filterCategoryId, setFilterCategoryId] = useState('all');
+  const [filterMinAmount, setFilterMinAmount] = useState('');
+  const [filterMaxAmount, setFilterMaxAmount] = useState('');
+
   //edit state
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editAmount, setEditAmount] = useState('');
@@ -61,6 +67,21 @@ export function ExpensesPage() {
     categories.forEach((c) => m.set(c.id, c.name));
     return m;
   }, [categories]);
+
+  const filteredExpenses = useMemo(() => {
+    const min = Number(filterMinAmount);
+    const max = Number(filterMaxAmount);
+    const hasMin = filterMinAmount.trim() !== '' && Number.isFinite(min);
+    const hasMax = filterMaxAmount.trim() !== '' && Number.isFinite(max);
+
+    return expenses.filter((e) => {
+      if (filterMonth && !e.occurredAt.startsWith(filterMonth)) return false;
+      if (filterCategoryId !== 'all' && e.categoryId !== filterCategoryId) return false;
+      if (hasMin && e.amount < min) return false;
+      if (hasMax && e.amount > max) return false;
+      return true;
+    });
+  }, [expenses, filterMonth, filterCategoryId, filterMinAmount, filterMaxAmount]);
 
   //initial bootstrap for form defaults
   //load user categories and profile currency, then seed form currency from profile
@@ -281,6 +302,13 @@ export function ExpensesPage() {
     onSaveEditExpense(id);
   }
 
+  function clearFilters() {
+    setFilterMonth('');
+    setFilterCategoryId('all');
+    setFilterMinAmount('');
+    setFilterMaxAmount('');
+  }
+
   //precompute converted values only for rows not already in base currency
   //if FX lookup fails, store NaN so the UI can show "conversion unavailable"
   useEffect(() => {
@@ -413,8 +441,68 @@ export function ExpensesPage() {
         the expense date.
       </p>
 
+      <div className={styles.filterCard}>
+        <div className={styles.filterGrid}>
+          <div>
+            <div className={styles.filterLabel}>Month</div>
+            <input
+              className={styles.control}
+              type="month"
+              value={filterMonth}
+              onChange={(e) => setFilterMonth(e.target.value)}
+              disabled={busy}
+            />
+          </div>
+
+          <div>
+            <div className={styles.filterLabel}>Category</div>
+            <select
+              className={styles.control}
+              value={filterCategoryId}
+              onChange={(e) => setFilterCategoryId(e.target.value)}
+              disabled={busy}
+            >
+              <option value="all">All categories</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <div className={styles.filterLabel}>Min</div>
+            <input
+              className={styles.control}
+              placeholder="e.g. 10"
+              value={filterMinAmount}
+              onChange={(e) => setFilterMinAmount(e.target.value)}
+              disabled={busy}
+            />
+          </div>
+
+          <div>
+            <div className={styles.filterLabel}>Max</div>
+            <input
+              className={styles.control}
+              placeholder="e.g. 100"
+              value={filterMaxAmount}
+              onChange={(e) => setFilterMaxAmount(e.target.value)}
+              disabled={busy}
+            />
+          </div>
+
+          <div className={styles.filterActions}>
+            <button className={styles.btn} type="button" onClick={clearFilters}>
+              Reset
+            </button>
+          </div>
+        </div>
+      </div>
+
       <ul className={styles.list}>
-        {expenses.map((e) => (
+        {filteredExpenses.map((e) => (
           <li key={e.id} className={styles.row}>
             {editingId === e.id ? (
               <form
@@ -553,8 +641,10 @@ export function ExpensesPage() {
         ))}
       </ul>
 
-      {expenses.length === 0 && (
-        <p className={styles.muted}>No expenses yet.</p>
+      {filteredExpenses.length === 0 && (
+        <p className={styles.muted}>
+          {expenses.length === 0 ? 'No expenses yet.' : 'No expenses match current filters.'}
+        </p>
       )}
     </div>
   );
