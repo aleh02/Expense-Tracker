@@ -503,7 +503,7 @@ export function DashboardPage() {
       {totalsLoading && <p className={styles.muted}>Loading...</p>}
 
       <div style={{ maxWidth: 700, marginTop: 16 }}>
-        <ul style={{ marginTop: 16 }}>
+        <ul style={{ margin: '16px 0 0', padding: 0, listStyle: 'none' }}>
           {totalsByCategory.map((t) => (
             <li
               key={t.categoryId}
@@ -521,7 +521,7 @@ export function DashboardPage() {
                 style={{
                   fontSize: 20,
                   fontWeight: 600,
-                  marginLeft: 20,
+                  marginLeft: 40,
                   textAlign: 'left',
                 }}
               >
@@ -530,7 +530,7 @@ export function DashboardPage() {
 
               <div
                 className={styles.muted}
-                style={{ fontSize: 20, marginLeft: 35, textAlign: 'left' }}
+                style={{ fontSize: 20, marginLeft: 45, textAlign: 'left' }}
               >
                 {t.total.toFixed(2)} ({baseCurrency})
               </div>

@@ -209,7 +209,6 @@ export function CategoriesPage() {
                   alignItems: 'center',
                   padding: 12,
                   borderRadius: 12,
-                  marginLeft: 20,
                 }}
               >
                 {editingId === c.id ? (
