@@ -9,7 +9,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-//demo-level storage, subscriptions live in memory only
+//subscriptions live in memory only
 //restarting the server clears them, and this does not scale across instances
 const subscriptionsByUser = new Map();  //userId -> PushSubscription
 

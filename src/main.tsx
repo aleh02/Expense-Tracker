@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { App } from './app/App.tsx';
 import './index.css';
 
-//recover from stale chunk references after a new deploy by reloading once
+//reloads once after new deploy, recovers from stale chunk references
 window.addEventListener('vite:preloadError', (event) => {
   event.preventDefault();
   window.location.reload();
