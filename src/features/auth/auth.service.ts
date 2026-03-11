@@ -1,4 +1,4 @@
-//Service: login/logout functions
+//Service: authentication functions
 import {
   createUserWithEmailAndPassword,
   GoogleAuthProvider,

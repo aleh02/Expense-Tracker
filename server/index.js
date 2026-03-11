@@ -34,6 +34,16 @@ app.post('/subscribe', (req, res) => {
     return res.status(existed ? 200 : 201).json({ ok: true });  //200 if updated
 });
 
+app.post('/unsubscribe', (req, res) => {
+    const { userId } = req.body;
+    if (!userId) {
+        return res.status(400).json({ error: 'Missing userId.' });
+    }
+
+    subscriptionsByUser.delete(userId);
+    return res.status(200).json({ ok: true });
+});
+
 //send push notification to user
 app.post('/notify', async (req, res) => {
     const { userId, title, body, url } = req.body;

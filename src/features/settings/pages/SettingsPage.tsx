@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../auth/useAuth';
 import {
+  disablePushNotifications,
   enablePushNotifications,
+  getCurrentSubscription,
   sendBudgetAlert,
 } from '../../notifications/push.service';
 import { getProfile, setBaseCurrency } from '../profile.service';
@@ -11,13 +13,6 @@ import styles from '../../../app/layouts/AppShell.module.css';
 import pkg from '../../../../package.json';
 
 const APP_VERSION = pkg.version;
-
-async function getCurrentSubscription(): Promise<PushSubscription | null> {
-  //read the subscription from the current browser service worker registration
-  if (!('serviceWorker' in navigator)) return null;
-  const reg = await navigator.serviceWorker.ready;
-  return reg.pushManager.getSubscription();
-}
 
 export function SettingsPage() {
   const { user } = useAuth();
@@ -84,6 +79,8 @@ export function SettingsPage() {
   }
 
   async function onDisablePush() {
+    if (!user) return;
+
     setLoading(true);
     setMsg(null);
 
@@ -92,6 +89,7 @@ export function SettingsPage() {
       if (sub) {
         await sub.unsubscribe(); //removes sub from this browser
       }
+      await disablePushNotifications(user.uid);
       setPushEnabled(false);
       setMsg('Push notifications disabled.');
     } catch (e: unknown) {

@@ -10,6 +10,12 @@ function urlBase64ToUint8Array(base64Str: string) {
   return output;
 }
 
+export async function getCurrentSubscription(): Promise<PushSubscription | null> {
+  if (!('serviceWorker' in navigator)) return null;
+  const reg = await navigator.serviceWorker.ready;
+  return reg.pushManager.getSubscription();
+}
+
 //ask permission and subscribe
 export async function enablePushNotifications(userId: string) {
   if (!('serviceWorker' in navigator))
@@ -38,6 +44,14 @@ export async function enablePushNotifications(userId: string) {
   });
 
   return true;
+}
+
+export async function disablePushNotifications(userId: string) {
+  await fetch(`${PUSH_SERVER_URL}/unsubscribe`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId }),
+  });
 }
 
 //server push trigger (for budget alerts)
