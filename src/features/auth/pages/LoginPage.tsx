@@ -18,6 +18,7 @@ export function LoginPage() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 
+  //return the error message if available, otherwise use the fallback text
   function getErrorMessage(e: unknown, fallback: string) {
     if (e && typeof e === 'object' && 'message' in e) {
       const message = (e as { message?: unknown }).message;

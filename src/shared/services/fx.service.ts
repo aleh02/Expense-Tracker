@@ -1,6 +1,7 @@
 import { normalizeCurrency } from '../utils/currency';
 
 const FX_URL = 'https://api.frankfurter.dev/v1'; //stable public endpoint
+const FX_CACHE_TTL_MS = 24 * 60 * 60 * 1000;  //24 hours TTL
 
 type FxResponse = {
   amount: number;
@@ -9,9 +10,14 @@ type FxResponse = {
   rates: Record<string, number>;
 };
 
+type FxCacheEntry = {
+  rate: number;
+  cachedAt: number;
+};
+
 //simple in-memory cache for FX rates during the current app session
-//key format: "YYYY-MM-DD|FROM|TO", no TTL for now
-const rateCache = new Map<string, number>();
+//key format: "YYYY-MM-DD|FROM|TO"
+const rateCache = new Map<string, FxCacheEntry>();
 
 function cacheKey(date: string, from: string, to: string) {
   return `${date}|${from}|${to}`;
@@ -29,7 +35,9 @@ export async function getFxRate(
 
   const key = cacheKey(date, f, t);
   const cached = rateCache.get(key);
-  if (cached != null) return cached;
+  if (cached && Date.now() - cached.cachedAt < FX_CACHE_TTL_MS) {
+    return cached.rate;
+  }
 
   const url = `${FX_URL}/${date}?from=${encodeURIComponent(f)}&to=${encodeURIComponent(t)}`;
   const res = await fetch(url);
@@ -41,7 +49,7 @@ export async function getFxRate(
   if (!Number.isFinite(rate) || rate <= 0)
     throw new Error('FX rate missing/invalid in response.');
 
-  rateCache.set(key, rate);
+  rateCache.set(key, { rate, cachedAt: Date.now() });
   return rate;
 }
 

@@ -36,13 +36,11 @@ export function ExpensesPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [baseCurrency, setBaseCurrency] = useState('EUR');
-  const [convertedById, setConvertedById] = useState<Record<string, number>>(
-    {},
-  );
+  const [convertedById, setConvertedById] = useState<Record<string, number>>({});
 
   //form state
   const [amount, setAmount] = useState(''); //keep as string for input
-  const [currency, setCurrency] = useState('EUR');
+  const [currency, setCurrency] = useState('EUR');  //expense form currency
   const [categoryId, setCategoryId] = useState('');
   const [occurredAt, setOccurredAt] = useState(todayYmd());
   const [note, setNote] = useState('');
@@ -84,7 +82,7 @@ export function ExpensesPage() {
   }, [expenses, filterMonth, filterCategoryId, filterMinAmount, filterMaxAmount]);
 
   //initial bootstrap for form defaults
-  //load user categories and profile currency, then seed form currency from profile
+  //load user categories and set the form currency from user's profile
   useEffect(() => {
     if (!user) return;
 
@@ -93,10 +91,11 @@ export function ExpensesPage() {
     (async () => {
       try {
         setError(null);
-        setLoading(true); //start loading
-        const cats = await listCategories(user.uid);
+        setLoading(true);
 
+        const cats = await listCategories(user.uid);
         const p = await getProfile(user.uid);
+
         setBaseCurrency(p.baseCurrency);
         setCurrency(p.baseCurrency);
 
@@ -105,7 +104,7 @@ export function ExpensesPage() {
         console.error(e);
         if (!cancelled) setError('Failed to load categories.');
       } finally {
-        if (!cancelled) setLoading(false); //done loading
+        if (!cancelled) setLoading(false);
       }
     })();
 
@@ -146,11 +145,12 @@ export function ExpensesPage() {
 
   async function reloadExpenses() {
     if (!user) return;
-    //single refresh path used after create, update, and delete
+    //single refresh, used after create, update and delete
     const exps = await listExpenses(user.uid);
     setExpenses(exps);
   }
 
+  //on expense submit
   async function onAdd() {
     if (!user) return;
 
@@ -221,6 +221,7 @@ export function ExpensesPage() {
     }
   }
 
+  //custom form submit
   function handleAdd(e: React.FormEvent) {
     e.preventDefault();
     onAdd();
@@ -309,8 +310,8 @@ export function ExpensesPage() {
     setFilterMaxAmount('');
   }
 
-  //precompute converted values only for rows not already in base currency
-  //if FX lookup fails, store NaN so the UI can show "conversion unavailable"
+  //precompute converted values only for rows not in base currency
+  //if FX lookup fails, store NaN and UI show "conversion unavailable"
   useEffect(() => {
     let cancelled = false;
     (async () => {

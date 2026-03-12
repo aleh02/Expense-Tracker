@@ -84,7 +84,7 @@ export async function listExpensesInMonth(
   userId: string,
   month: string,
 ): Promise<Expense[]> {
-  //filter by occurredAt range [start, endExclusive] using ISO date strings
+  //filter by occurredAt range [start, endExclusive] using YYYY-MM-DD
   const { start, endExclusive } = monthRange(month);
 
   const q = query(

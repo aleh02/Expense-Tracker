@@ -12,8 +12,10 @@ import { getProfile } from '../../settings/profile.service';
 import { normalizeCurrency } from '../../../shared/utils/currency';
 import styles from '../../../app/layouts/AppShell.module.css';
 
+//localStorage key 
 const DASHBOARD_MONTH_STORAGE_KEY = 'dashboard:selectedMonth';
 
+//check if date in YYYY-MM format
 function isValidMonth(value: string | null): value is string {
   return typeof value === 'string' && /^\d{4}-\d{2}$/.test(value);
 }
@@ -26,13 +28,16 @@ type CategoryTotal = {
 
 export function DashboardPage() {
   const { user } = useAuth();
+
   const [month, setMonth] = useState(() => {
     const fallback = currentMonth();
     if (typeof window === 'undefined') return fallback;
 
+    //loads selected month from local storage
     const stored = window.localStorage.getItem(DASHBOARD_MONTH_STORAGE_KEY);
     return isValidMonth(stored) ? stored : fallback;
   });
+
   const [categories, setCategories] = useState<Category[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
 
@@ -55,6 +60,7 @@ export function DashboardPage() {
   const [totalsByCategoryBase, setTotalsByCategoryBase] =
     useState<Map<string, number>>(new Map());
 
+  //save selected month in local storage
   useEffect(() => {
     if (typeof window === 'undefined' || !isValidMonth(month)) return;
     window.localStorage.setItem(DASHBOARD_MONTH_STORAGE_KEY, month);
@@ -87,7 +93,7 @@ export function DashboardPage() {
         setLoading(true);
         setError(null);
 
-        //load ONCE categories, month expenses and budget (in parallel)
+        //load once: categories, month expenses and budget
         const [cats, exps, budget] = await Promise.all([
           listCategories(user.uid),
           listExpensesInMonth(user.uid, month),
@@ -129,13 +135,14 @@ export function DashboardPage() {
     };
   }, [user, month, baseCurrency]);
 
+  //lookup map categoryId -> categoryName
   const categoryMap = useMemo(() => {
     const m = new Map<string, string>();
     categories.forEach((c) => m.set(c.id, c.name));
     return m;
   }, [categories]);
 
-  //build month totals in current base currency
+  //build month totals in current baseCurrency
   //each expense is converted using the historical rate of its own date
   useEffect(() => {
     let cancelled = false;
@@ -156,8 +163,8 @@ export function DashboardPage() {
               baseCurrency,
             );
           } catch (err: unknown) {
-            //keep rendering the rest, one failed conversion should not block the whole dashboard
-            //totals may be slightly lower until rates are available again
+            //skip failed conversions so one FX error does not break the whole dashboard
+            //totals(by month/category) may be temporarily lower until rates are available again
             console.warn('convertAmount failed: ', err);
             continue;
           }
@@ -178,8 +185,7 @@ export function DashboardPage() {
     };
   }, [expenses, baseCurrency]);
 
-  //derived view model for chart and list rendering
-  //keep sorting here so rendering code stays simple
+  //build and sort the category totals used by chart and list
   const totalsByCategory = useMemo((): CategoryTotal[] => {
     const result: CategoryTotal[] = [];
 

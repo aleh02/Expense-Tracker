@@ -1,4 +1,3 @@
-//Service: authentication functions
 import {
   createUserWithEmailAndPassword,
   GoogleAuthProvider,

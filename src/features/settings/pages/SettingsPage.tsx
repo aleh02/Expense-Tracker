@@ -33,7 +33,7 @@ export function SettingsPage() {
   const isPasswordUser =
     user?.providerData?.some((p) => p.providerId === 'password') ?? false;
 
-  //detects current push state
+  //detects current push state once when opening SettingsPage
   useEffect(() => {
     let cancelled = false;
 
