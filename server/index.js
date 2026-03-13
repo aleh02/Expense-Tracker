@@ -23,6 +23,17 @@ app.get('/vapidPublicKey', (req, res) => {
     res.json({ publicKey: process.env.VAPID_PUBLIC_KEY });
 });
 
+app.get('/subscription-status/:userId', (req, res) => {
+    const { userId } = req.params;
+    if (!userId) {
+        return res.status(400).json({ error: 'Missing userId.' });
+    }
+
+    return res.status(200).json({
+        subscribed: subscriptionsByUser.has(userId),
+    });
+});
+
 //save user subscription
 app.post('/subscribe', (req, res) => {
     const { userId, subscription } = req.body;

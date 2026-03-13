@@ -26,6 +26,18 @@ function todayYmd(): string {
   return `${yyyy}-${mm}-${dd}`;
 }
 
+//open native date picker when the input is clicked
+function openNativePicker(e: React.MouseEvent<HTMLInputElement>) {
+  const input = e.currentTarget;
+  if (typeof input.showPicker !== 'function' || input.disabled) return;
+
+  try {
+    input.showPicker();
+  } catch {
+    //ignore browsers that do not support this
+  }
+}
+
 export function ExpensesPage() {
   const { user } = useAuth(); //ensures user exists
 
@@ -81,8 +93,7 @@ export function ExpensesPage() {
     });
   }, [expenses, filterMonth, filterCategoryId, filterMinAmount, filterMaxAmount]);
 
-  //initial bootstrap for form defaults
-  //load user categories and set the form currency from user's profile
+  //load form defaults: user categories and base currency
   useEffect(() => {
     if (!user) return;
 
@@ -143,14 +154,14 @@ export function ExpensesPage() {
     };
   }, [user]);
 
+  //refresh expenses, used after create, update and delete
   async function reloadExpenses() {
     if (!user) return;
-    //single refresh, used after create, update and delete
+
     const exps = await listExpenses(user.uid);
     setExpenses(exps);
   }
 
-  //on expense submit
   async function onAdd() {
     if (!user) return;
 
@@ -407,6 +418,7 @@ export function ExpensesPage() {
               type="date"
               value={occurredAt}
               onChange={(e) => setOccurredAt(e.target.value)}
+              onClick={openNativePicker}
               disabled={busy}
             />
 
@@ -451,6 +463,7 @@ export function ExpensesPage() {
               type="month"
               value={filterMonth}
               onChange={(e) => setFilterMonth(e.target.value)}
+              onClick={openNativePicker}
               disabled={busy}
             />
           </div>
@@ -521,6 +534,7 @@ export function ExpensesPage() {
                   type="date"
                   value={editOccurredAt}
                   onChange={(ev) => setEditOccurredAt(ev.target.value)}
+                  onClick={openNativePicker}
                   disabled={busy}
                 />
 

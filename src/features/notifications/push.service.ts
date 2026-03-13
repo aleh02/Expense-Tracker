@@ -16,6 +16,16 @@ export async function getCurrentSubscription(): Promise<PushSubscription | null>
   return reg.pushManager.getSubscription();
 }
 
+export async function getServerPushStatus(userId: string): Promise<boolean> {
+  const res = await fetch(
+    `${PUSH_SERVER_URL}/subscription-status/${encodeURIComponent(userId)}`,
+  );
+  if (!res.ok) throw new Error('Failed to read push subscription status.');
+
+  const data = (await res.json()) as { subscribed?: boolean };
+  return data.subscribed === true;
+}
+
 //ask permission and subscribe
 export async function enablePushNotifications(userId: string) {
   if (!('serviceWorker' in navigator))

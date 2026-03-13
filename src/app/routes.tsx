@@ -1,4 +1,3 @@
-//router
 import { Suspense, lazy, type ReactNode } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { AppLayout } from './layouts/AppLayout';

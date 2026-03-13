@@ -127,7 +127,7 @@ export function LoginPage() {
 
             {mode === 'login' && (
               <button
-                className={styles.ghostBtn} // or your styles.btn if you’re using AppShell styles
+                className={styles.ghostBtn}
                 type="button"
                 onClick={handleForgotPassword}
                 disabled={busy || !email}

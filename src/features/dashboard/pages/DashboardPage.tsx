@@ -12,12 +12,24 @@ import { getProfile } from '../../settings/profile.service';
 import { normalizeCurrency } from '../../../shared/utils/currency';
 import styles from '../../../app/layouts/AppShell.module.css';
 
-//localStorage key 
+//local storage key 
 const DASHBOARD_MONTH_STORAGE_KEY = 'dashboard:selectedMonth';
 
 //check if date in YYYY-MM format
 function isValidMonth(value: string | null): value is string {
   return typeof value === 'string' && /^\d{4}-\d{2}$/.test(value);
+}
+
+//open native month picker when the input is clicked
+function openNativePicker(e: React.MouseEvent<HTMLInputElement>) {
+  const input = e.currentTarget;
+  if (typeof input.showPicker !== 'function' || input.disabled) return;
+
+  try {
+    input.showPicker();
+  } catch {
+    //ignore browsers that do not support this
+  }
 }
 
 type CategoryTotal = {
@@ -33,9 +45,8 @@ export function DashboardPage() {
     const fallback = currentMonth();
     if (typeof window === 'undefined') return fallback;
 
-    //loads selected month from local storage
     const stored = window.localStorage.getItem(DASHBOARD_MONTH_STORAGE_KEY);
-    return isValidMonth(stored) ? stored : fallback;
+    return isValidMonth(stored) ? stored : fallback;  //selected month or current month
   });
 
   const [categories, setCategories] = useState<Category[]>([]);
@@ -185,7 +196,7 @@ export function DashboardPage() {
     };
   }, [expenses, baseCurrency]);
 
-  //build and sort the category totals used by chart and list
+  //saves sorted category totals
   const totalsByCategory = useMemo((): CategoryTotal[] => {
     const result: CategoryTotal[] = [];
 
@@ -210,7 +221,6 @@ export function DashboardPage() {
     setEditingBudget(false);
   }
 
-  //handler to save budget
   async function onSaveBudget() {
     if (!user) return;
 
@@ -299,6 +309,7 @@ export function DashboardPage() {
               const value = e.target.value;
               if (isValidMonth(value)) setMonth(value);
             }}
+            onClick={openNativePicker}
             disabled={loading}
             style={{ height: 32, padding: '0px 10px', borderRadius: 10 }}
           />

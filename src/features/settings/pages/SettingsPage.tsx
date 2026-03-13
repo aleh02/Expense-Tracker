@@ -4,6 +4,7 @@ import {
   disablePushNotifications,
   enablePushNotifications,
   getCurrentSubscription,
+  getServerPushStatus,
   sendBudgetAlert,
 } from '../../notifications/push.service';
 import { getProfile, setBaseCurrency } from '../profile.service';
@@ -20,6 +21,7 @@ export function SettingsPage() {
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [pushEnabled, setPushEnabled] = useState(false);
+  const [pushNeedsSync, setPushNeedsSync] = useState(false);
 
   const [baseCurrency, setBaseCurrencyState] = useState('EUR');
 
@@ -33,14 +35,47 @@ export function SettingsPage() {
   const isPasswordUser =
     user?.providerData?.some((p) => p.providerId === 'password') ?? false;
 
+  async function refreshPushState(currentUserId: string) {
+    const sub = await getCurrentSubscription();
+    const hasBrowserSubscription = !!sub;
+
+    let hasServerSubscription = false;
+    if (hasBrowserSubscription) {
+      try {
+        hasServerSubscription = await getServerPushStatus(currentUserId);
+      } catch (e: unknown) {
+        console.warn('Push status check failed:', e);
+      }
+    }
+
+    setPushEnabled(hasBrowserSubscription && hasServerSubscription);
+    setPushNeedsSync(hasBrowserSubscription && !hasServerSubscription);
+  }
+
   //detects current push state once when opening SettingsPage
   useEffect(() => {
+    if (!user) return;
+
     let cancelled = false;
 
     (async () => {
       try {
         const sub = await getCurrentSubscription();
-        if (!cancelled) setPushEnabled(!!sub); //!!sub = true if subscribed, false if null
+        const hasBrowserSubscription = !!sub;
+
+        let hasServerSubscription = false;
+        if (hasBrowserSubscription) {
+          try {
+            hasServerSubscription = await getServerPushStatus(user.uid);
+          } catch (e: unknown) {
+            console.warn('Push status check failed:', e);
+          }
+        }
+
+        if (!cancelled) {
+          setPushEnabled(hasBrowserSubscription && hasServerSubscription);
+          setPushNeedsSync(hasBrowserSubscription && !hasServerSubscription);
+        }
       } catch (e: unknown) {
         console.warn(e);
       }
@@ -49,7 +84,7 @@ export function SettingsPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [user]);
 
   //loads base currency
   useEffect(() => {
@@ -68,7 +103,7 @@ export function SettingsPage() {
 
     try {
       await enablePushNotifications(user.uid);
-      setPushEnabled(true);
+      await refreshPushState(user.uid);
       setMsg('Push notifications enabled.');
     } catch (e: unknown) {
       console.error(e);
@@ -91,6 +126,7 @@ export function SettingsPage() {
       }
       await disablePushNotifications(user.uid);
       setPushEnabled(false);
+      setPushNeedsSync(false);
       setMsg('Push notifications disabled.');
     } catch (e: unknown) {
       console.error(e);
@@ -254,6 +290,14 @@ export function SettingsPage() {
         }}
       >
         <h3 style={{ marginTop: 0 }}>Notifications</h3>
+
+        <p className={styles.muted} style={{ marginTop: 0 }}>
+          {pushEnabled
+            ? 'Push notifications are enabled.'
+            : pushNeedsSync
+              ? 'Browser subscription found, but the server lost it. Enable notifications to sync again.'
+              : 'Push notifications are disabled.'}
+        </p>
 
         <div
           style={{

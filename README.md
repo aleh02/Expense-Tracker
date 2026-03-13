@@ -45,10 +45,22 @@ Supports monthly budgets, multi-currency expenses with historical exchange rates
 - **Backend / Services**
   - Firebase Authentication
   - Cloud Firestore
-- **Optional**
   - Express + Web Push server for notifications
+- **External APIs**
+  - Frankfurter FX API (`https://api.frankfurter.dev/v1`) for exchange rates
 - **Hosting**
   - Firebase Hosting (free tier)
+
+---
+
+## Repository Structure
+
+This repository is organized as a small monorepo:
+
+- `src/` contains the React frontend
+- `server/` contains the Express + Web Push backend
+
+The frontend also works without the push server, but push notifications require the backend to be running.
 
 ---
 
@@ -58,17 +70,30 @@ Supports monthly budgets, multi-currency expenses with historical exchange rates
 - Firebase project with:
   - Authentication enabled
   - Cloud Firestore enabled
+  - Email/password provider enabled
+  - Google provider enabled if you want to use Google Sign-In
+
+---
+
+## Test Access
+
+- Test account:
+  - email: `test@test.test`
+  - password: `123456`
+- You can also create a new account directly from the Login page using email and password
+- Sign-in with Google is also available
+- Password reset and password change features require a valid email/password account
 
 ---
 
 ## Local Setup
 
-### 1. Install dependencies
+### 1. Install frontend dependencies
 ```bash
 npm install
 ```
 
-### 2. Environment variables
+### 2. Configure frontend environment
 
 Create a `.env.local` file in the project root:
 
@@ -87,7 +112,7 @@ VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
 VITE_FIREBASE_APP_ID=1:123456789:web:abcdef
 ```
 
-### Run locally
+### 3. Run the frontend
 
 ```bash
 npm run dev
@@ -99,12 +124,44 @@ Open:
 http://localhost:5173
 ```
 
-### Build and preview
+### 4. Build and preview the frontend
 
 ```bash
 npm run build
 npm run preview
 ```
+
+### 5. Run the push server for notifications
+
+Install backend dependencies:
+
+```bash
+cd server
+npm install
+```
+
+Create `server/.env`:
+
+```env
+PORT=8080
+VAPID_SUBJECT=mailto:you@example.com
+VAPID_PUBLIC_KEY=...
+VAPID_PRIVATE_KEY=...
+```
+
+Run the backend:
+
+```bash
+npm run dev
+```
+
+The push server runs on:
+
+```bash
+http://localhost:8080
+```
+
+The frontend expects this URL in `src/features/notifications/push.service.ts`.
 
 ---
 
@@ -141,9 +198,9 @@ Each document is owned by a user (userId field).
 
 ```js
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-
     function signedIn() {
       return request.auth != null;
     }
@@ -156,33 +213,47 @@ service cloud.firestore {
       return signedIn() && request.auth.uid == request.resource.data.userId;
     }
 
+    function keepsSameOwner() {
+      return request.resource.data.userId == resource.data.userId;
+    }
+
     match /profiles/{uid} {
       allow read, write: if signedIn() && request.auth.uid == uid;
     }
 
     match /categories/{id} {
       allow create: if isOwnerOnCreate();
-      allow read, update, delete: if isOwner();
+      allow read, delete: if isOwner();
+      allow update: if isOwner() && keepsSameOwner();
     }
 
     match /expenses/{id} {
       allow create: if isOwnerOnCreate();
-      allow read, update, delete: if isOwner();
+      allow read, delete: if isOwner();
+      allow update: if isOwner() && keepsSameOwner();
     }
 
     match /budgets/{id} {
-      allow create: if isOwnerOnCreate();
-      allow read, update, delete: if isOwner();
-    }
+  		allow create: if isOwnerOnCreate()
+    		&& id == request.auth.uid + '_' + request.resource.data.month;
+  		allow read: if signedIn()
+    		&& (id.matches('^' + request.auth.uid + '_.*$') || isOwner());
+  		allow delete: if isOwner();
+  		allow update: if isOwner() 
+      	&& keepsSameOwner()
+    		&& id == resource.data.userId + '_' + resource.data.month
+    		&& id == request.resource.data.userId + '_' + request.resource.data.month;
+		}
   }
 }
 ```
 
 ---
 
-## Push Notifications (Optional)
+## Push Notifications
 
-The frontend can connect to an external Express + Web Push server.
+Push notifications are handled by the Express + Web Push server in `server/`.
+The rest of the app still works even if the backend is not running, but notification subscribe/test/alert features require it.
 
 Note: the push server base URL is currently hardcoded in
 `src/features/notifications/push.service.ts` as:
@@ -198,6 +269,8 @@ If used:
 - The push server must be deployed separately
 - Uses VAPID keys
 - Subscriptions are stored server-side per user
+- The backend keeps subscriptions in memory, so restarting the server clears them
+- After a push server restart, you may need to enable notifications again from Settings to re-sync the browser subscription
 
 Example environment for push server:
 

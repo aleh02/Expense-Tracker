@@ -9,14 +9,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   //subscribes to Firebase auth state changes
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => { //callback function called on auth state change
+    const unsub = onAuthStateChanged(auth, (u) => {
       setUser(u);
       setLoading(false);
     }); 
-    return () => unsub(); //cleanup function, unsubscribes from the listener when component unmounts
-  }, []); //once when mounted
+    return () => unsub();
+  }, []);
 
-  //caches the value object to prevent unnecessary re-renders
+  //caches user and loading values to prevent unnecessary re-renders
   const value = useMemo(() => ({ user, loading }), [user, loading]);
 
   //provides the auth state to all child components
