@@ -165,6 +165,20 @@ The frontend expects this URL in `src/features/notifications/push.service.ts`.
 
 ---
 
+## Quick Test Flow
+
+Suggested test flow after starting the frontend and, if needed, the push server:
+
+1. Sign in with the test account or create a new account.
+2. Create at least one category from the Categories page.
+3. Add one or more expenses from the Expenses page.
+4. Open the Dashboard and verify monthly totals, category breakdown, and budget management.
+5. Open Settings and change the base currency.
+6. If the push server is running, enable notifications and send a test notification from Settings.
+7. Optionally install the app as a PWA and verify offline fallback / cached behavior.
+
+---
+
 ## Deploy to Firebase Hosting
 
 ### 1. Login and initialize
