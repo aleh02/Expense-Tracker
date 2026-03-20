@@ -12,8 +12,8 @@ import { getProfile } from '../../settings/profile.service';
 import { normalizeCurrency } from '../../../shared/utils/currency';
 import styles from '../../../app/layouts/AppShell.module.css';
 
-//local storage key 
-const DASHBOARD_MONTH_STORAGE_KEY = 'dashboard:selectedMonth';
+//saved during in-app navigation, resets on reload
+let selectedMonth = currentMonth();
 
 //check if date in YYYY-MM format
 function isValidMonth(value: string | null): value is string {
@@ -41,13 +41,7 @@ type CategoryTotal = {
 export function DashboardPage() {
   const { user } = useAuth();
 
-  const [month, setMonth] = useState(() => {
-    const fallback = currentMonth();
-    if (typeof window === 'undefined') return fallback;
-
-    const stored = window.localStorage.getItem(DASHBOARD_MONTH_STORAGE_KEY);
-    return isValidMonth(stored) ? stored : fallback;  //selected month or current month
-  });
+  const [month, setMonth] = useState(selectedMonth);
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -71,10 +65,9 @@ export function DashboardPage() {
   const [totalsByCategoryBase, setTotalsByCategoryBase] =
     useState<Map<string, number>>(new Map());
 
-  //save selected month in local storage
   useEffect(() => {
-    if (typeof window === 'undefined' || !isValidMonth(month)) return;
-    window.localStorage.setItem(DASHBOARD_MONTH_STORAGE_KEY, month);
+    if (!isValidMonth(month)) return;
+    selectedMonth = month;
   }, [month]);
 
   //loads base currency
