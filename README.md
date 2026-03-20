@@ -1,7 +1,7 @@
 # Expense Tracker
 
 A modern expense tracking web app built with **React + Vite**, powered by **Firebase Authentication** and **Cloud Firestore**.  
-Supports monthly budgets, multi-currency expenses with historical exchange rates, and optional push notifications.
+ Supports monthly budgets, multi-currency expenses with historical exchange rates, and push notification support.
 
 ---
 
@@ -71,7 +71,7 @@ The frontend also works without the push server, but push notifications require 
   - Authentication enabled
   - Cloud Firestore enabled
   - Email/password provider enabled
-  - Google provider enabled if you want to use Google Sign-In
+  - Google provider enabled
 
 ---
 
